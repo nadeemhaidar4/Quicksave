@@ -14,23 +14,23 @@
     </filter>
   </defs>
 
-  <!-- Background gradient -->
+  <!-- Background -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
 
-  <!-- Shine -->
+  <!-- Top shine -->
   <rect width="512" height="256" rx="112" fill="url(#shine)"/>
 
-  <!-- Subtle inner border -->
+  <!-- Inner border -->
   <rect x="6" y="6" width="500" height="500" rx="108"
         fill="none"
         stroke="rgba(255,255,255,0.12)"
         stroke-width="2"/>
 
-  <!-- "Quick" white -->
+  <!-- "Quick" text -->
   <text
-    x="256" y="210"
+    x="256" y="218"
     font-family="'Arial Black','Arial Bold',Impact,Gadget,sans-serif"
-    font-size="130"
+    font-size="132"
     font-weight="900"
     fill="#ffffff"
     text-anchor="middle"
@@ -39,15 +39,15 @@
     filter="url(#sh)"
   >Quick</text>
 
-  <!-- Divider line -->
-  <rect x="80" y="268" width="352" height="3" rx="2"
-        fill="rgba(255,255,255,0.25)"/>
+  <!-- Divider -->
+  <rect x="72" y="272" width="368" height="3" rx="1.5"
+        fill="rgba(255,255,255,0.20)"/>
 
-  <!-- "Save" light purple -->
+  <!-- "Save" text - light purple -->
   <text
-    x="256" y="350"
+    x="256" y="358"
     font-family="'Arial Black','Arial Bold',Impact,Gadget,sans-serif"
-    font-size="130"
+    font-size="132"
     font-weight="900"
     fill="#ddd0ff"
     text-anchor="middle"
