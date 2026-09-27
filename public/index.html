@@ -20,6 +20,8 @@
   <link rel="apple-touch-icon" href="/icon-192.png">
   <title>QuickSave — Free Instagram Facebook Twitter Video Downloader</title>
   <link rel="stylesheet" href="/styles.css">
+
+  <!-- Ad script - sirf load hoga, dikhega tab jab download hoga -->
   <script>
     (function() {
       if (localStorage.getItem("qs_ads_disabled") !== "true") {
@@ -32,6 +34,71 @@
       }
     })();
   </script>
+
+  <style>
+    /* ── Download Banner Ad ── */
+    #dlBannerAd {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 8000;
+      background: #0d1020;
+      border-top: 1px solid rgba(124,108,252,0.2);
+      padding: 8px 16px 12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+      animation: slideUpBanner 0.3s ease;
+    }
+    #dlBannerAd.show {
+      display: flex;
+    }
+    @keyframes slideUpBanner {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    #dlBannerAd .ad-label-bar {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+    #dlBannerAd .ad-bar-inner {
+      width: 100%;
+      max-width: 728px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.02);
+    }
+    #dlBannerAd .ad-close-bar {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: #444;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 6px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    #dlBannerAd .ad-close-bar:hover { color: #888; }
+
+    /* Body ko bottom padding do jab banner show ho */
+    body.ad-banner-active main {
+      padding-bottom: 90px;
+    }
+  </style>
 </head>
 <body>
 
@@ -56,18 +123,17 @@
   </div>
 </div>
 
-<!-- Interstitial Ad -->
-<div id="interstitialAd" class="interstitial-overlay hide">
-  <div class="interstitial-box">
-    <div class="interstitial-header">
-      <span class="ad-label">Advertisement</span>
-      <button id="closeInterstitial" class="close-btn">
-        Skip <span id="adTimer">5</span>s
-      </button>
-    </div>
-    <div class="interstitial-content">
-      <p style="color:#555;font-size:13px;text-align:center;">Advertisement Loading...</p>
-    </div>
+<!-- ════════════════════════════════════════
+     BOTTOM BANNER AD
+     Sirf download process mein dikhega
+════════════════════════════════════════ -->
+<div id="dlBannerAd">
+  <button class="ad-close-bar" id="closeBannerAd" title="Close">✕</button>
+  <span class="ad-label-bar">Advertisement</span>
+  <div class="ad-bar-inner">
+    <!-- Monetag ya koi bhi banner ad yahan aayega -->
+    <!-- Aap apna ad tag yahan paste kar sakte hain -->
+    <ins class="monetag-banner" data-zone="287137" style="display:inline-block;width:320px;height:50px;"></ins>
   </div>
 </div>
 
@@ -159,12 +225,6 @@
         Having trouble? <a href="#" id="retryBtn">Try again</a>
       </p>
     </section>
-
-    <!-- Ad after download -->
-    <div class="ad-wrap hide" id="adAfterDl" data-ad>
-      <span class="ad-label">Advertisement</span>
-      <div class="ad-banner"></div>
-    </div>
 
     <!-- How To -->
     <section class="howto">
