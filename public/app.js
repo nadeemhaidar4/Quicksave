@@ -1,8 +1,9 @@
-/* QuickSave app.js v8.9.1 */
-console.log("QuickSave v8.9.1 loaded");
+/* QuickSave app.js v8.9.2 */
+console.log("QuickSave v8.9.2 loaded");
 
 const AD_DISABLE_CODE = "666666";
 const AD_SECONDS      = 5;
+const ICON_VERSION    = "2";
 const $ = id => document.getElementById(id);
 
 /* ── Elements ── */
@@ -56,7 +57,6 @@ let adTimer       = null;
 let adCallback    = null;
 let adsInjected   = false;
 
-/* SVG ring - r=15, circumference = 2*PI*15 */
 const RING_CIRC = 94.25;
 
 /* ════════════════════════════════════════
@@ -105,6 +105,126 @@ function msg(t, c = "") {
 }
 
 /* ════════════════════════════════════════
+   ICON UPDATE PROMPT
+════════════════════════════════════════ */
+function checkIconUpdate() {
+  const stored = localStorage.getItem("qs_icon_v");
+
+  /* Pehli baar - sirf save karo, prompt mat dikhao */
+  if (!stored) {
+    localStorage.setItem("qs_icon_v", ICON_VERSION);
+    return;
+  }
+
+  /* Already latest version */
+  if (stored === ICON_VERSION) return;
+
+  /* Purana version - update karo aur prompt dikhao */
+  localStorage.setItem("qs_icon_v", ICON_VERSION);
+
+  /* Sirf installed PWA users ko dikhao */
+  if (!isStandalone()) return;
+
+  setTimeout(() => showIconUpdatePrompt(), 2000);
+}
+
+function showIconUpdatePrompt() {
+  if (document.getElementById("iconUpdatePrompt")) return;
+
+  const isIOSDevice = isIOS();
+
+  const prompt = document.createElement("div");
+  prompt.id    = "iconUpdatePrompt";
+  prompt.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    background: #1c2033;
+    border: 1px solid rgba(124,108,252,0.4);
+    border-radius: 16px;
+    padding: 16px 20px;
+    width: min(90vw, 360px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    font-family: system-ui, sans-serif;
+    animation: iconPromptUp 0.3s ease;
+  `;
+
+  prompt.innerHTML = `
+    <style>
+      @keyframes iconPromptUp {
+        from { transform: translateX(-50%) translateY(16px); opacity: 0; }
+        to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+      }
+    </style>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="
+        width:44px;height:44px;flex-shrink:0;
+        background:linear-gradient(135deg,#7c6cfc,#e83e8c);
+        border-radius:12px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:22px;color:#fff;font-weight:900;
+      ">QS</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;color:#eee;">
+          🎨 New Icon Available!
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:2px;">
+          Reinstall to update home screen icon
+        </div>
+      </div>
+      <button
+        onclick="document.getElementById('iconUpdatePrompt').remove()"
+        style="
+          background:rgba(255,255,255,0.08);border:none;color:#666;
+          width:28px;height:28px;border-radius:50%;cursor:pointer;
+          font-size:13px;flex-shrink:0;
+        ">✕</button>
+    </div>
+
+    <div style="
+      background:rgba(124,108,252,0.08);
+      border:1px solid rgba(124,108,252,0.2);
+      border-radius:10px;padding:12px;
+      font-size:12px;color:#aaa;line-height:1.9;
+      margin-bottom:14px;
+    ">
+      ${isIOSDevice
+        ? `1. Open in <b style="color:#ddd">Safari</b><br>
+           2. Tap <b style="color:#ddd">Share ⎋</b> button<br>
+           3. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>
+           4. Delete old icon from home screen`
+        : `1. Tap Chrome menu <b style="color:#ddd">⋮</b><br>
+           2. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>
+           3. Delete old icon from home screen`
+      }
+    </div>
+
+    <button
+      onclick="document.getElementById('iconUpdatePrompt').remove()"
+      style="
+        width:100%;
+        background:linear-gradient(135deg,#7c6cfc,#9b6bfc);
+        color:#fff;border:none;padding:11px;border-radius:10px;
+        cursor:pointer;font-size:14px;font-weight:700;
+        font-family:system-ui,sans-serif;
+      ">Got it! 👍</button>
+  `;
+
+  document.body.appendChild(prompt);
+
+  /* 15 sec baad auto remove */
+  setTimeout(() => {
+    try {
+      const el = document.getElementById("iconUpdatePrompt");
+      if (el) el.remove();
+    } catch {}
+  }, 15000);
+}
+
+/* ════════════════════════════════════════
    AD MANAGEMENT
 ════════════════════════════════════════ */
 function isAdsOff() {
@@ -143,7 +263,7 @@ adCodeInput?.addEventListener("keydown", e => {
 });
 
 /* ════════════════════════════════════════
-   AD INJECT - Sirf pehli baar download ke waqt
+   AD INJECT - Sirf download ke waqt pehli baar
 ════════════════════════════════════════ */
 function injectAds() {
   if (adsInjected || isAdsOff()) return;
@@ -153,8 +273,8 @@ function injectAds() {
   try {
     (function(s) {
       s.dataset.zone = "11897091";
-      s.src = "https://nap5k.com/tag.min.js";
-      s.async = true;
+      s.src          = "https://nap5k.com/tag.min.js";
+      s.async        = true;
       s.setAttribute("data-cfasync", "false");
     })(document.body.appendChild(document.createElement("script")));
     console.log("[ad] In-Page Push injected");
@@ -171,12 +291,12 @@ function injectAds() {
       bannerAdSlot.innerHTML = "";
       bannerAdSlot.appendChild(ins);
 
-      const s = document.createElement("script");
-      s.src   = "https://quge5.com/88/tag.min.js";
+      const s     = document.createElement("script");
+      s.src       = "https://quge5.com/88/tag.min.js";
       s.setAttribute("data-zone", "287137");
       s.setAttribute("data-cfasync", "false");
-      s.async = true;
-      s.onerror = () => showFallbackAd();
+      s.async     = true;
+      s.onerror   = () => showFallbackAd();
       document.body.appendChild(s);
       console.log("[ad] Banner injected");
     }
@@ -206,31 +326,24 @@ function showFallbackAd() {
    AD OVERLAY
 ════════════════════════════════════════ */
 function showAdOverlay(onComplete) {
-  /* Ads off - seedha download */
   if (isAdsOff()) {
     if (onComplete) onComplete();
     return;
   }
 
   adCallback = onComplete || null;
-
-  /* Ads inject karo */
   injectAds();
 
-  /* Show overlay */
   adOverlay.classList.remove("hide");
   document.body.style.overflow = "hidden";
 
-  /* Ring reset */
   if (ringProgress) {
     ringProgress.style.strokeDasharray  = `${RING_CIRC} ${RING_CIRC}`;
     ringProgress.style.strokeDashoffset = "0";
   }
 
-  /* Skip button pehle hide */
   adSkipBtn?.classList.add("hide");
 
-  /* Countdown */
   let secs = AD_SECONDS;
   if (countdownNum)  countdownNum.textContent  = secs;
   if (skipCountdown) skipCountdown.textContent  = secs;
@@ -242,14 +355,12 @@ function showAdOverlay(onComplete) {
     if (countdownNum)  countdownNum.textContent  = secs;
     if (skipCountdown) skipCountdown.textContent  = secs;
 
-    /* Ring fill */
     if (ringProgress) {
       const elapsed = AD_SECONDS - secs;
       const offset  = RING_CIRC - (elapsed / AD_SECONDS) * RING_CIRC;
       ringProgress.style.strokeDashoffset = offset;
     }
 
-    /* 2 sec baad skip dikhao */
     if (secs <= AD_SECONDS - 2) {
       adSkipBtn?.classList.remove("hide");
     }
@@ -277,7 +388,6 @@ function triggerAdCallback() {
   }
 }
 
-/* Skip button */
 adSkipBtn?.addEventListener("click", () => {
   hideAdOverlay();
   triggerAdCallback();
@@ -318,9 +428,10 @@ function getSmartFilename(filename) {
     if (now - usedNames[k] > 24 * 60 * 60 * 1000) delete usedNames[k];
   });
 
-  const ext  = filename.match(/\.[a-z0-9]+$/i)?.[0] || ".mp4";
-  const base = filename.replace(/\.[a-z0-9]+$/i, "");
-  let finalName = filename, counter = 0;
+  const ext      = filename.match(/\.[a-z0-9]+$/i)?.[0] || ".mp4";
+  const base     = filename.replace(/\.[a-z0-9]+$/i, "");
+  let finalName  = filename;
+  let counter    = 0;
 
   while (usedNames[finalName]) {
     counter++;
@@ -414,6 +525,13 @@ function setupSWMessages() {
 
   navigator.serviceWorker.addEventListener("message", async event => {
     const d = event.data || {};
+
+    /* SW updated - icon check karo */
+    if (d.type === "SW_UPDATED") {
+      console.log("[App] SW updated");
+      checkIconUpdate();
+      return;
+    }
 
     if (d.type === "BG_STATUS") {
       switch(d.status) {
@@ -601,7 +719,7 @@ async function processUrl(value, autoDownload = false) {
 }
 
 /* ════════════════════════════════════════
-   ACTUAL DOWNLOAD - Ad ke baad chalta hai
+   ACTUAL DOWNLOAD
 ════════════════════════════════════════ */
 async function doActualDownload(d) {
   progress.classList.remove("hide");
@@ -609,7 +727,6 @@ async function doActualDownload(d) {
   bar.style.width          = "15%";
   progressPct.textContent  = "15%";
 
-  /* iOS special case */
   if (isIOS()) {
     window.location.href = buildDlUrl(d);
     setTimeout(() => {
@@ -652,7 +769,6 @@ async function doActualDownload(d) {
 
 /* ════════════════════════════════════════
    TRIGGER DOWNLOAD
-   Flow: Ad dikhao → 5 sec → Download
 ════════════════════════════════════════ */
 function triggerDownload(d) {
   if (!d?.id) return;
@@ -727,14 +843,12 @@ if (retryBtn) retryBtn.onclick = e => {
 ════════════════════════════════════════ */
 ["dragenter","dragover"].forEach(ev =>
   drop.addEventListener(ev, x => {
-    x.preventDefault();
-    drop.classList.add("drag");
+    x.preventDefault(); drop.classList.add("drag");
   })
 );
 ["dragleave","drop"].forEach(ev =>
   drop.addEventListener(ev, x => {
-    x.preventDefault();
-    drop.classList.remove("drag");
+    x.preventDefault(); drop.classList.remove("drag");
   })
 );
 drop.addEventListener("drop", e => {
@@ -800,18 +914,17 @@ if ("serviceWorker" in navigator) {
 async function onStartup() {
   setAuto(isAutoOn());
 
-  /* Ad code status */
   if (isAdsOff() && adCodeMsg) {
     adCodeMsg.textContent = "✅ Ads disabled";
     adCodeMsg.className   = "code-msg ok";
   }
 
   checkVersion();
+  checkIconUpdate();
   updateQ();
   setInterval(updateQ, 30000);
   setTimeout(() => notifySWVisible(), 1000);
 
-  /* iOS install prompt */
   if (isIOS() && !isStandalone() && !localStorage.getItem("qs_ios_dismissed")) {
     setTimeout(() => iosInstall?.classList.remove("hidden"), 3000);
   }
