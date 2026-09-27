@@ -13,14 +13,14 @@
   <meta property="og:title" content="QuickSave - Free Instagram TikTok Facebook Twitter Video Downloader">
   <meta property="og:description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips for free.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="/icon-192.png">
+  <meta property="og:image" content="/icon-192.png?v=2">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/icon.svg">
-  <link rel="apple-touch-icon" href="/icon-192.png">
-  <link rel="apple-touch-startup-image" href="/icon-512.png">
+  <link rel="icon" href="/icon.svg?v=2">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=2">
+  <link rel="apple-touch-startup-image" href="/icon-512.png?v=2">
   <title>QuickSave — Free Instagram TikTok Facebook Twitter Video Downloader</title>
   <link rel="stylesheet" href="/styles.css">
-  <!-- Push Notification - sirf permission mangta hai, koi popup nahi -->
+  <!-- Push Notification - sirf permission mangta hai -->
   <script src="https://5gvci.com/act/files/tag.min.js?z=11897090"
           data-cfasync="false" async></script>
 </head>
@@ -47,10 +47,9 @@
   </div>
 </div>
 
-<!-- AD OVERLAY - Sirf download click ke baad dikhega -->
+<!-- AD OVERLAY - Sirf download click ke baad -->
 <div id="adOverlay" class="ad-overlay hide">
   <div class="ad-overlay-box">
-
     <div class="ad-overlay-header">
       <span class="ad-overlay-label">Advertisement</span>
       <div class="ad-overlay-countdown">
@@ -61,12 +60,10 @@
         <span id="countdownNum">5</span>
       </div>
     </div>
-
     <div class="ad-content-area">
       <div id="inpageAdSlot"></div>
       <div class="ad-banner-slot" id="bannerAdSlot"></div>
     </div>
-
     <div class="ad-overlay-footer">
       <span class="ad-skip-info">
         Download starts in <strong id="skipCountdown">5</strong>s...
@@ -75,7 +72,6 @@
         Download Now ⬇
       </button>
     </div>
-
   </div>
 </div>
 
@@ -103,13 +99,11 @@
     <h1>Save any video.<br><i>In seconds.</i></h1>
     <p>Download Instagram Reels, TikTok videos, Facebook videos, and Twitter clips for free. No signup. No watermark.</p>
 
-    <!-- Queue Status -->
     <div id="queueStatus" class="queue-status hide">
       <div class="queue-dot"></div>
       <span id="queueText">Processing...</span>
     </div>
 
-    <!-- Background Status -->
     <div id="bgStatus" class="bg-status hide">
       <div id="bgStatusIcon" class="bg-icon">⏳</div>
       <div class="bg-content">
@@ -118,7 +112,6 @@
       </div>
     </div>
 
-    <!-- Input Box -->
     <div id="drop" class="box">
       <div class="droptext">🔗 Drop or paste a video link here</div>
       <div class="input">
@@ -126,10 +119,8 @@
         <input
           id="url"
           placeholder="Paste Instagram, TikTok, Facebook, or Twitter link..."
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
+          autocomplete="off" autocorrect="off"
+          autocapitalize="off" spellcheck="false"
           type="url"
         >
         <button id="paste" type="button">Paste</button>
@@ -140,10 +131,8 @@
       <div class="hint">✓ Free &nbsp;•&nbsp; No Signup &nbsp;•&nbsp; No Watermark</div>
     </div>
 
-    <!-- Status -->
     <div id="status" class="status hide"></div>
 
-    <!-- Result Card -->
     <section id="result" class="result hide">
       <div class="preview">
         <div class="thumb" id="thumb" title="Click to preview"><span>▶</span></div>
@@ -168,7 +157,6 @@
       </p>
     </section>
 
-    <!-- How To -->
     <section class="howto">
       <h2>How to Download Videos</h2>
       <div class="steps">
@@ -196,7 +184,6 @@
       </div>
     </section>
 
-    <!-- Features -->
     <div class="features">
       <article>
         <b>📸</b>
@@ -220,7 +207,6 @@
       </article>
     </div>
 
-    <!-- FAQ -->
     <section class="faq">
       <h2>Frequently Asked Questions</h2>
       <details>
@@ -249,7 +235,6 @@
       </details>
     </section>
 
-    <!-- Donation -->
     <section class="donation-section">
       <div class="donation-header">
         <span class="donation-emoji">❤️</span>
@@ -276,35 +261,28 @@
       </div>
     </section>
 
-    <!-- UPI Modal -->
     <div id="upiModal" class="upi-modal hide">
       <div class="upi-modal-box">
         <button class="upi-modal-close" id="upiModalClose">✕</button>
         <h3>💳 Choose UPI App</h3>
         <p class="upi-id-text">UPI ID: <strong>nadeemhaidar4959@ybl</strong></p>
         <div class="upi-apps-grid">
-          <a class="upi-app-btn"
-             href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>📱</span><strong>Any UPI</strong>
           </a>
-          <a class="upi-app-btn"
-             href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>💜</span><strong>PhonePe</strong>
           </a>
-          <a class="upi-app-btn"
-             href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>🎯</span><strong>Google Pay</strong>
           </a>
-          <a class="upi-app-btn"
-             href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>💙</span><strong>Paytm</strong>
           </a>
-          <a class="upi-app-btn"
-             href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>🇮🇳</span><strong>BHIM</strong>
           </a>
-          <a class="upi-app-btn"
-             href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>🏦</span><strong>Other</strong>
           </a>
         </div>
@@ -312,7 +290,6 @@
       </div>
     </div>
 
-    <!-- Ad Code -->
     <div class="ad-code-section">
       <h3>🔑 Have a special code?</h3>
       <div class="code-input-row">
