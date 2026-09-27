@@ -5,100 +5,23 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080b16">
   <meta name="monetag" content="cc536f6250a6995ca1149160b2612123">
-  <meta name="description" content="Download Instagram Reels, Facebook videos and Twitter clips free. Fast, easy, no signup required.">
-  <meta name="keywords" content="instagram video downloader, facebook video download, twitter video save, reels downloader free">
+  <meta name="description" content="Download Instagram Reels, TikTok, Facebook videos and Twitter clips free. Fast, easy, no signup required.">
+  <meta name="keywords" content="instagram video downloader, tiktok downloader, facebook video download, twitter video save, reels downloader free">
   <meta name="robots" content="index, follow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="QuickSave">
-  <meta property="og:title" content="QuickSave - Free Instagram Facebook Twitter Video Downloader">
-  <meta property="og:description" content="Download Instagram Reels, Facebook videos, Twitter clips for free. No signup needed.">
+  <meta property="og:title" content="QuickSave - Free Instagram TikTok Facebook Twitter Video Downloader">
+  <meta property="og:description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips for free. No signup needed.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/icon-192.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <title>QuickSave — Free Instagram Facebook Twitter Video Downloader</title>
+  <!-- iOS PWA splash screens -->
+  <link rel="apple-touch-startup-image" href="/icon-512.png">
+  <title>QuickSave — Free Instagram TikTok Facebook Twitter Video Downloader</title>
   <link rel="stylesheet" href="/styles.css">
-
-  <!-- Ad script - sirf load hoga, dikhega tab jab download hoga -->
-  <script>
-    (function() {
-      if (localStorage.getItem("qs_ads_disabled") !== "true") {
-        var s = document.createElement("script");
-        s.src = "https://quge5.com/88/tag.min.js";
-        s.setAttribute("data-zone", "287137");
-        s.async = true;
-        s.setAttribute("data-cfasync", "false");
-        document.head.appendChild(s);
-      }
-    })();
-  </script>
-
-  <style>
-    /* ── Download Banner Ad ── */
-    #dlBannerAd {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 8000;
-      background: #0d1020;
-      border-top: 1px solid rgba(124,108,252,0.2);
-      padding: 8px 16px 12px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
-      animation: slideUpBanner 0.3s ease;
-    }
-    #dlBannerAd.show {
-      display: flex;
-    }
-    @keyframes slideUpBanner {
-      from { transform: translateY(100%); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
-    #dlBannerAd .ad-label-bar {
-      font-size: 9px;
-      color: #333;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      align-self: flex-start;
-    }
-    #dlBannerAd .ad-bar-inner {
-      width: 100%;
-      max-width: 728px;
-      min-height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.02);
-    }
-    #dlBannerAd .ad-close-bar {
-      position: absolute;
-      top: 6px;
-      right: 10px;
-      background: transparent;
-      border: none;
-      color: #444;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 2px 6px;
-      line-height: 1;
-      transition: color 0.2s;
-    }
-    #dlBannerAd .ad-close-bar:hover { color: #888; }
-
-    /* Body ko bottom padding do jab banner show ho */
-    body.ad-banner-active main {
-      padding-bottom: 90px;
-    }
-  </style>
 </head>
 <body>
 
@@ -116,24 +39,28 @@
   <div class="ios-install-content">
     <div class="ios-install-icon">↧</div>
     <div class="ios-install-text">
-      <strong>Install QuickSave</strong>
-      <span>Tap <b>Share</b> then <b>"Add to Home Screen"</b></span>
+      <strong>Install QuickSave on iPhone</strong>
+      <span>Tap <b>Share</b> <span class="share-icon">⎋</span> then <b>"Add to Home Screen"</b></span>
     </div>
     <button id="iosDismiss" class="ios-dismiss">✕</button>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     BOTTOM BANNER AD
-     Sirf download process mein dikhega
-════════════════════════════════════════ -->
-<div id="dlBannerAd">
-  <button class="ad-close-bar" id="closeBannerAd" title="Close">✕</button>
-  <span class="ad-label-bar">Advertisement</span>
+<!-- ════════════════
+     DOWNLOAD BANNER AD
+     Sirf download process mein dikhega + 5 sec countdown
+════════════════ -->
+<div id="dlBannerAd" class="dl-banner-ad">
+  <div class="ad-top-bar">
+    <span class="ad-label-txt">Advertisement</span>
+    <div id="adCountdown" class="ad-countdown hide">
+      <span id="adCountdownNum">5</span>s
+    </div>
+    <button class="ad-close-btn" id="closeBannerAd" title="Close ad">✕</button>
+  </div>
   <div class="ad-bar-inner">
-    <!-- Monetag ya koi bhi banner ad yahan aayega -->
-    <!-- Aap apna ad tag yahan paste kar sakte hain -->
-    <ins class="monetag-banner" data-zone="287137" style="display:inline-block;width:320px;height:50px;"></ins>
+    <ins class="monetag-banner" data-zone="287137"
+         style="display:inline-block;width:320px;height:50px;"></ins>
   </div>
 </div>
 
@@ -157,9 +84,9 @@
   </nav>
 
   <section class="hero">
-    <div class="tag">● INSTAGRAM &nbsp;•&nbsp; FACEBOOK &nbsp;•&nbsp; TWITTER/X</div>
+    <div class="tag">● INSTAGRAM &nbsp;•&nbsp; TIKTOK &nbsp;•&nbsp; FACEBOOK &nbsp;•&nbsp; TWITTER/X</div>
     <h1>Save any video.<br><i>In seconds.</i></h1>
-    <p>Download Instagram Reels, Facebook videos, and Twitter clips for free. No signup. No watermark.</p>
+    <p>Download Instagram Reels, TikTok videos, Facebook videos, and Twitter clips for free. No signup. No watermark.</p>
 
     <!-- Queue Status -->
     <div id="queueStatus" class="queue-status hide">
@@ -183,7 +110,7 @@
         <span>⌁</span>
         <input
           id="url"
-          placeholder="Paste Instagram, Facebook, or Twitter link..."
+          placeholder="Paste Instagram, TikTok, Facebook, or Twitter link..."
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
@@ -234,7 +161,7 @@
           <div class="step-num">1</div>
           <div class="step-text">
             <strong>Copy the link</strong>
-            <span>Open Instagram, Facebook, or Twitter. Tap Share → Copy Link.</span>
+            <span>Open Instagram, TikTok, Facebook, or Twitter. Tap Share → Copy Link.</span>
           </div>
         </div>
         <div class="step">
@@ -262,6 +189,11 @@
         <span>Download Reels, posts, and IGTV videos in HD quality instantly.</span>
       </article>
       <article>
+        <b>🎵</b>
+        <strong>TikTok Downloader</strong>
+        <span>Save TikTok videos without watermark in original quality.</span>
+      </article>
+      <article>
         <b>👥</b>
         <strong>Facebook Downloader</strong>
         <span>Save public Facebook videos in high quality with one click.</span>
@@ -281,6 +213,10 @@
         <p>Yes! QuickSave is 100% free. No hidden charges, no subscription, no signup required.</p>
       </details>
       <details>
+        <summary>Can I download TikTok videos without watermark?</summary>
+        <p>Yes! We download TikTok videos without watermark in original quality.</p>
+      </details>
+      <details>
         <summary>Can I download Instagram Reels without watermark?</summary>
         <p>Yes! All videos are watermark-free in original quality.</p>
       </details>
@@ -290,13 +226,72 @@
       </details>
       <details>
         <summary>Does it work on iPhone and Android?</summary>
-        <p>Yes! Works on all devices — iPhone, Android, and desktop browsers.</p>
+        <p>Yes! Works on all devices — iPhone, Android, and desktop browsers. Install as app from browser for best experience.</p>
       </details>
       <details>
         <summary>Are my downloads private?</summary>
         <p>Yes. We do not store any URLs or videos. Everything is deleted immediately after download.</p>
       </details>
     </section>
+
+    <!-- ════════════════════════════════════════
+         DONATION SECTION
+    ════════════════════════════════════════ -->
+    <section class="donation-section">
+      <div class="donation-header">
+        <span class="donation-emoji">❤️</span>
+        <h3>Support QuickSave</h3>
+        <p>Agar yeh app aapke kaam aaya toh please support karein. Aapka ek chhota sa donation bahut bada fark dalta hai!</p>
+      </div>
+      <div class="donation-buttons">
+        <!-- UPI Button -->
+        <button class="donate-btn upi-btn" id="donateUpiBtn" type="button">
+          <span class="donate-icon">💳</span>
+          <div class="donate-info">
+            <strong>Pay via UPI</strong>
+            <small>PhonePe, GPay, Paytm & more</small>
+          </div>
+        </button>
+        <!-- PayPal Button -->
+        <a class="donate-btn paypal-btn" href="https://www.paypal.me/nadeemhaidar" target="_blank" rel="noopener">
+          <span class="donate-icon">🌐</span>
+          <div class="donate-info">
+            <strong>PayPal</strong>
+            <small>International payment</small>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- UPI Modal -->
+    <div id="upiModal" class="upi-modal hide">
+      <div class="upi-modal-box">
+        <button class="upi-modal-close" id="upiModalClose">✕</button>
+        <h3>💳 Choose UPI App</h3>
+        <p class="upi-id-text">UPI ID: <strong>nadeemhaidar4959@ybl</strong></p>
+        <div class="upi-apps-grid">
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR" id="upiGeneric">
+            <span>📱</span><strong>Any UPI App</strong>
+          </a>
+          <a class="upi-app-btn" href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>💜</span><strong>PhonePe</strong>
+          </a>
+          <a class="upi-app-btn" href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🎯</span><strong>Google Pay</strong>
+          </a>
+          <a class="upi-app-btn" href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>💙</span><strong>Paytm</strong>
+          </a>
+          <a class="upi-app-btn" href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🇮🇳</span><strong>BHIM</strong>
+          </a>
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR&am=">
+            <span>🏦</span><strong>Other Bank</strong>
+          </a>
+        </div>
+        <p class="upi-note">App open hogi — amount daalein aur pay karein 🙏</p>
+      </div>
+    </div>
 
     <!-- Ad Code -->
     <div class="ad-code-section">
@@ -330,6 +325,19 @@
   </footer>
 </main>
 
+<!-- Ad script - sirf load hoga -->
+<script>
+  (function() {
+    if (localStorage.getItem("qs_ads_disabled") !== "true") {
+      var s = document.createElement("script");
+      s.src = "https://quge5.com/88/tag.min.js";
+      s.setAttribute("data-zone", "287137");
+      s.async = true;
+      s.setAttribute("data-cfasync", "false");
+      document.head.appendChild(s);
+    }
+  })();
+</script>
 <script src="/app.js"></script>
 </body>
 </html>
