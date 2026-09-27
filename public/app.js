@@ -1,48 +1,65 @@
-/* QuickSave app.js v8.8 */
-console.log("QuickSave v8.8 loaded");
+/* QuickSave app.js v8.9 */
+console.log("QuickSave v8.9 loaded");
 
 const AD_DISABLE_CODE = "666666";
 const $ = id => document.getElementById(id);
 
-const url            = $("url"),
-      paste          = $("paste"),
-      go             = $("go"),
-      drop           = $("drop"),
-      status         = $("status"),
-      result         = $("result"),
-      mediaName      = $("name"),
-      meta           = $("meta"),
-      downloadBtn    = $("download"),
-      thumb          = $("thumb"),
-      progress       = $("progress"),
-      bar            = $("bar"),
-      progressText   = $("progressText"),
-      progressPct    = $("progressPct"),
-      install        = $("install"),
-      iosInstall     = $("iosInstall"),
-      iosDismiss     = $("iosDismiss"),
-      autoToggle     = $("autoToggle"),
-      autoLabel      = $("autoLabel"),
-      retryBtn       = $("retryBtn"),
-      queueStatus    = $("queueStatus"),
-      queueText      = $("queueText"),
-      updateBanner   = $("updateBanner"),
-      adCodeInput    = $("adCodeInput"),
-      adCodeBtn      = $("adCodeBtn"),
-      adCodeMsg      = $("adCodeMsg"),
-      bgStatus       = $("bgStatus"),
-      bgStatusText   = $("bgStatusText"),
-      bgStatusIcon   = $("bgStatusIcon"),
-      dlBannerAd     = $("dlBannerAd"),
-      closeBannerAd  = $("closeBannerAd");
+const url           = $("url"),
+      paste         = $("paste"),
+      go            = $("go"),
+      drop          = $("drop"),
+      status        = $("status"),
+      result        = $("result"),
+      mediaName     = $("name"),
+      meta          = $("meta"),
+      downloadBtn   = $("download"),
+      thumb         = $("thumb"),
+      progress      = $("progress"),
+      bar           = $("bar"),
+      progressText  = $("progressText"),
+      progressPct   = $("progressPct"),
+      install       = $("install"),
+      iosInstall    = $("iosInstall"),
+      iosDismiss    = $("iosDismiss"),
+      autoToggle    = $("autoToggle"),
+      autoLabel     = $("autoLabel"),
+      retryBtn      = $("retryBtn"),
+      queueStatus   = $("queueStatus"),
+      queueText     = $("queueText"),
+      updateBanner  = $("updateBanner"),
+      adCodeInput   = $("adCodeInput"),
+      adCodeBtn     = $("adCodeBtn"),
+      adCodeMsg     = $("adCodeMsg"),
+      bgStatus      = $("bgStatus"),
+      bgStatusText  = $("bgStatusText"),
+      bgStatusIcon  = $("bgStatusIcon"),
+      dlBannerAd    = $("dlBannerAd"),
+      closeBannerAd = $("closeBannerAd"),
+      adCountdown   = $("adCountdown"),
+      adCountdownNum= $("adCountdownNum"),
+      donateUpiBtn  = $("donateUpiBtn"),
+      upiModal      = $("upiModal"),
+      upiModalClose = $("upiModalClose");
 
-let current       = null;
-let installPrompt = null;
-let autoProc      = false;
-let lastUrl       = "";
-let swReg         = null;
-let newSW         = null;
-let bannerAdTimer = null; // Banner auto-hide timer
+let current         = null;
+let installPrompt   = null;
+let autoProc        = false;
+let lastUrl         = "";
+let swReg           = null;
+let newSW           = null;
+let bannerAdTimer   = null;
+let countdownTimer  = null;
+let adCountdownSecs = 5;
+let pendingDownload = null; // Download jo ad ke baad hogi
+
+/* ════════════════════════════════════════
+   SUPPORTED PLATFORMS - TikTok added
+════════════════════════════════════════ */
+const SUPPORTED = [
+  "instagram.com","facebook.com","fb.watch",
+  "twitter.com","x.com",
+  "tiktok.com","vm.tiktok.com"
+];
 
 /* ════════════════════════════════════════
    UTILS
@@ -59,7 +76,6 @@ function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches ||
          navigator.standalone === true;
 }
-const SUPPORTED = ["instagram.com","facebook.com","fb.watch","twitter.com","x.com"];
 function isSupportedUrl(u) {
   try {
     const h = new URL(u).hostname.replace(/^www\./,"");
@@ -86,46 +102,121 @@ function msg(t, c="") {
 }
 
 /* ════════════════════════════════════════
-   BANNER AD - Download ke time dikhao
+   DONATION - UPI Modal
 ════════════════════════════════════════ */
-function showBannerAd() {
-  // Ads off hain toh mat dikhao
-  if (isAdsOff()) return;
-  if (!dlBannerAd) return;
+donateUpiBtn?.addEventListener("click", () => {
+  upiModal?.classList.remove("hide");
+  document.body.style.overflow = "hidden";
+});
 
-  // Pehle se show ho raha hai
-  if (dlBannerAd.classList.contains("show")) return;
+upiModalClose?.addEventListener("click", closeUpiModal);
 
+upiModal?.addEventListener("click", (e) => {
+  if (e.target === upiModal) closeUpiModal();
+});
+
+function closeUpiModal() {
+  upiModal?.classList.add("hide");
+  document.body.style.overflow = "";
+}
+
+// UPI app click - amount field pe focus karne ki koshish
+document.querySelectorAll(".upi-app-btn").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    // Small delay ke baad modal close karo
+    setTimeout(() => closeUpiModal(), 300);
+  });
+});
+
+/* ════════════════════════════════════════
+   BANNER AD - 5 second countdown ke saath
+════════════════════════════════════════ */
+function showBannerAd(onComplete) {
+  if (isAdsOff()) {
+    // Ads off - seedha callback
+    if (onComplete) setTimeout(onComplete, 0);
+    return;
+  }
+  if (!dlBannerAd) {
+    if (onComplete) setTimeout(onComplete, 0);
+    return;
+  }
+
+  // Store callback
+  pendingDownload = onComplete || null;
+
+  // Show banner
   dlBannerAd.classList.add("show");
   document.body.classList.add("ad-banner-active");
 
-  // Pehla auto-hide timer cancel karo agar tha
-  if (bannerAdTimer) clearTimeout(bannerAdTimer);
+  // Countdown shuru karo
+  startAdCountdown();
 
-  console.log("[ad] Banner shown - download started");
+  console.log("[ad] Banner shown with 5s countdown");
 }
 
-function hideBannerAd(delay = 0) {
+function startAdCountdown() {
+  // Pehla countdown clear karo
+  if (countdownTimer) clearInterval(countdownTimer);
+
+  adCountdownSecs = 5;
+
+  if (adCountdown) adCountdown.classList.remove("hide");
+  if (adCountdownNum) adCountdownNum.textContent = adCountdownSecs;
+
+  countdownTimer = setInterval(() => {
+    adCountdownSecs--;
+    if (adCountdownNum) adCountdownNum.textContent = adCountdownSecs;
+
+    if (adCountdownSecs <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+
+      // Ad complete - download trigger karo
+      console.log("[ad] 5s complete - triggering download");
+      hideBannerAd(0);
+
+      if (pendingDownload) {
+        const fn = pendingDownload;
+        pendingDownload = null;
+        setTimeout(fn, 100);
+      }
+    }
+  }, 1000);
+}
+
+function hideBannerAd(delay=0) {
   if (!dlBannerAd) return;
+  if (countdownTimer) clearInterval(countdownTimer);
+  if (adCountdown) adCountdown.classList.add("hide");
 
   if (bannerAdTimer) clearTimeout(bannerAdTimer);
 
-  if (delay > 0) {
-    bannerAdTimer = setTimeout(() => {
-      dlBannerAd.classList.remove("show");
-      document.body.classList.remove("ad-banner-active");
-      console.log("[ad] Banner hidden");
-    }, delay);
-  } else {
+  const doHide = () => {
     dlBannerAd.classList.remove("show");
     document.body.classList.remove("ad-banner-active");
     console.log("[ad] Banner hidden");
+  };
+
+  if (delay > 0) {
+    bannerAdTimer = setTimeout(doHide, delay);
+  } else {
+    doHide();
   }
 }
 
-// Close button
+// Close button - manual close
 closeBannerAd?.addEventListener("click", () => {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = null;
   hideBannerAd(0);
+
+  // Pending download bhi cancel nahi karenge - seedha trigger
+  if (pendingDownload) {
+    const fn = pendingDownload;
+    pendingDownload = null;
+    setTimeout(fn, 100);
+  }
 });
 
 /* ════════════════════════════════════════
@@ -232,10 +323,7 @@ function setAdsOff(v) {
 }
 function applyAds() {
   const off = isAdsOff();
-
-  // Agar ads off hain toh banner bhi chhupao
   if (off) hideBannerAd(0);
-
   if (adCodeMsg) {
     adCodeMsg.textContent = off ? "✅ Ads disabled" : "";
     adCodeMsg.className   = off ? "code-msg ok" : "code-msg";
@@ -245,27 +333,16 @@ adCodeBtn?.addEventListener("click", () => {
   const c = (adCodeInput?.value || "").trim();
   if (c === AD_DISABLE_CODE) {
     setAdsOff(true);
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "✅ Ads disabled!";
-      adCodeMsg.className   = "code-msg ok";
-    }
+    if (adCodeMsg) { adCodeMsg.textContent="✅ Ads disabled!"; adCodeMsg.className="code-msg ok"; }
   } else if (c === "000000") {
     setAdsOff(false);
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "Ads enabled.";
-      adCodeMsg.className   = "code-msg";
-    }
+    if (adCodeMsg) { adCodeMsg.textContent="Ads enabled."; adCodeMsg.className="code-msg"; }
   } else {
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "❌ Invalid code.";
-      adCodeMsg.className   = "code-msg err";
-    }
+    if (adCodeMsg) { adCodeMsg.textContent="❌ Invalid code."; adCodeMsg.className="code-msg err"; }
   }
   if (adCodeInput) adCodeInput.value = "";
 });
-adCodeInput?.addEventListener("keydown", e => {
-  if (e.key === "Enter") adCodeBtn?.click();
-});
+adCodeInput?.addEventListener("keydown", e => { if (e.key==="Enter") adCodeBtn?.click(); });
 
 /* ════════════════════════════════════════
    AUTO TOGGLE
@@ -291,8 +368,6 @@ function setupSWMessages() {
       switch(d.status) {
         case "processing":
           showBg("Processing your video...", "processing", "⏳");
-          // Processing shuru - banner dikhao
-          showBannerAd();
           break;
         case "downloading":
           showBg(`Downloading ${d.filename || "video"}...`, "downloading", "⬇");
@@ -300,7 +375,6 @@ function setupSWMessages() {
         case "error":
           showBg(d.msg || "Download failed. Please try again.", "err", "❌");
           hideBg(5000);
-          // Error pe banner chhupao
           hideBannerAd(3000);
           break;
       }
@@ -316,13 +390,12 @@ function setupSWMessages() {
         showBg(`✅ "${savedName}" saved!`, "ok", "✅");
         msg("✅ Video saved to Downloads!", "ok");
         hideBg(6000);
-        // Save ho gaya - banner 5 sec baad chhupao
-        hideBannerAd(5000);
+        hideBannerAd(2000);
       } catch(e) {
         console.error("[App] Save failed:", e.message);
         showBg(`Save failed: ${e.message}`, "err", "❌");
         hideBg(5000);
-        hideBannerAd(3000);
+        hideBannerAd(2000);
       }
     }
   });
@@ -333,9 +406,7 @@ function setupSWMessages() {
 ════════════════════════════════════════ */
 function notifySWVisible() {
   if (!swReg?.active) return;
-  try {
-    swReg.active.postMessage({ type: "CLIENT_VISIBLE" });
-  } catch {}
+  try { swReg.active.postMessage({ type: "CLIENT_VISIBLE" }); } catch {}
 }
 
 /* ════════════════════════════════════════
@@ -343,14 +414,8 @@ function notifySWVisible() {
 ════════════════════════════════════════ */
 async function startBgDownload(pageUrl) {
   if (!swReg?.active) return false;
-
   const dlId = `dl_${Date.now()}`;
-
-  swReg.active.postMessage({
-    type: "BG_DOWNLOAD",
-    data: { url: pageUrl, id: dlId }
-  });
-
+  swReg.active.postMessage({ type: "BG_DOWNLOAD", data: { url: pageUrl, id: dlId } });
   showBg("Processing your video. You can go back to your app!", "processing", "⏳");
   return true;
 }
@@ -360,11 +425,10 @@ async function startBgDownload(pageUrl) {
 ════════════════════════════════════════ */
 async function handleShare(sharedUrl) {
   if (!isSupportedUrl(sharedUrl)) {
-    msg("Only Instagram, Facebook, Twitter/X links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
     return;
   }
   url.value = sharedUrl;
-
   if (isPWA() && swReg?.active) {
     const ok = await startBgDownload(sharedUrl);
     if (ok) return;
@@ -384,7 +448,7 @@ function showUpdateBanner() {
 }
 async function checkVersion() {
   try {
-    const d  = await fetch("/api/version?t=" + Date.now()).then(r => r.json());
+    const d  = await fetch("/api/version?t="+Date.now()).then(r=>r.json());
     const sv = localStorage.getItem("qs_sv");
     if (sv && sv !== d.version) {
       localStorage.setItem("qs_sv", d.version);
@@ -415,7 +479,7 @@ async function tryAutoPaste() {
 async function processUrl(value, autoDownload=false) {
   if (!value || autoProc) return;
   if (!isSupportedUrl(value)) {
-    msg("Only Instagram, Facebook, Twitter/X links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
     return;
   }
 
@@ -425,8 +489,6 @@ async function processUrl(value, autoDownload=false) {
   go.disabled = true;
   result.classList.add("hide");
   progress.classList.add("hide");
-
-  // Inspect shuru pe banner mat dikhao - sirf download pe dikhega
   hideBannerAd(0);
 
   const btnTxt = [...go.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
@@ -444,9 +506,9 @@ async function processUrl(value, autoDownload=false) {
     const d = await r.json();
     updateQ();
 
-    if (r.status === 503 && d.type === "queue-full")
+    if (r.status===503 && d.type==="queue-full")
       throw new Error(`Server busy (${d.queueSize} waiting). Please try in 30 seconds.`);
-    if (r.status === 408)
+    if (r.status===408)
       throw new Error("Request timed out. Please try again.");
     if (!r.ok || !d.ok)
       throw new Error(d.message || "Could not process this link.");
@@ -455,9 +517,21 @@ async function processUrl(value, autoDownload=false) {
 
     current = d;
     mediaName.textContent = d.filename || "media.mp4";
+
+    // Platform badge
+    const platformEmoji = {
+      instagram: "📸 Instagram",
+      tiktok:    "🎵 TikTok",
+      facebook:  "👥 Facebook",
+      twitter:   "🐦 Twitter/X"
+    };
+    const platformLabel = platformEmoji[d.platform] || "📹 Video";
+
     meta.textContent =
+      platformLabel + " • " +
       (d.contentType || "media").replace("video/","").toUpperCase() +
       (d.size ? " • " + sizeStr(d.size) : "");
+
     showPreview(d);
     downloadBtn.href = buildDlUrl(d);
     downloadBtn.setAttribute("download", d.filename || "QuickSave_Media.mp4");
@@ -471,7 +545,6 @@ async function processUrl(value, autoDownload=false) {
   } catch(e) {
     console.error(e);
     msg("❌ " + (e.message || "Something went wrong."), "err");
-    // Error pe ensure banner chhupa rahe
     hideBannerAd(0);
   } finally {
     go.disabled = false;
@@ -482,26 +555,21 @@ async function processUrl(value, autoDownload=false) {
 }
 
 /* ════════════════════════════════════════
-   DOWNLOAD
+   ACTUAL DOWNLOAD (ad ke baad chalta hai)
 ════════════════════════════════════════ */
-async function startDownload(d) {
+async function doActualDownload(d) {
   progress.classList.remove("hide");
-
-  // ✅ Download shuru hote hi banner dikhao
-  showBannerAd();
-
   progressText.textContent = "Downloading...";
   bar.style.width          = "15%";
   progressPct.textContent  = "15%";
 
   if (isIOS()) {
+    // iOS ke liye special handling
     window.location.href = buildDlUrl(d);
     setTimeout(() => {
       bar.style.width          = "100%";
       progressPct.textContent  = "100%";
       progressText.textContent = "Tap and hold the video to save to Photos.";
-      // iOS pe 5 sec baad banner chhupao
-      hideBannerAd(5000);
     }, 800);
     return;
   }
@@ -516,7 +584,7 @@ async function startDownload(d) {
     bar.style.width         = "75%";
     progressPct.textContent = "75%";
 
-    const ct     = (response.headers.get("content-type") || "video/mp4").split(";")[0].trim();
+    const ct     = (response.headers.get("content-type")||"video/mp4").split(";")[0].trim();
     const buffer = await response.arrayBuffer();
 
     const savedName = await saveFileToDevice(buffer, d.filename || "QuickSave_video.mp4", ct);
@@ -526,22 +594,23 @@ async function startDownload(d) {
     progressText.textContent = `✅ "${savedName}" saved to Downloads!`;
     msg("✅ Video saved!", "ok");
 
-    // ✅ Download complete - banner 5 sec baad chhupao
-    hideBannerAd(5000);
-
   } catch(e) {
     console.error("[download]", e.message);
     progressText.textContent = "Download failed. Please try again.";
     msg("❌ " + e.message, "err");
-    // Error pe banner turant chhupao
-    hideBannerAd(2000);
   }
 }
 
+/* ════════════════════════════════════════
+   DOWNLOAD TRIGGER - Ad pehle, download baad mein
+════════════════════════════════════════ */
 function triggerDownload(d) {
   if (!d?.id) return;
-  // Ads on/off ka koi interstitial nahi - seedha download
-  startDownload(d);
+
+  // Ad show karo, callback mein actual download
+  showBannerAd(() => {
+    doActualDownload(d);
+  });
 }
 
 /* ════════════════════════════════════════
@@ -588,7 +657,7 @@ go.onclick = () => {
 };
 
 url.onkeydown = e => {
-  if (e.key === "Enter") {
+  if (e.key==="Enter") {
     const v = url.value.trim();
     if (v) processUrl(v, isAutoOn() && isSupportedUrl(v));
   }
@@ -597,7 +666,7 @@ url.onkeydown = e => {
 downloadBtn.addEventListener("click", e => {
   if (!current?.id) return;
   e.preventDefault();
-  startDownload(current);
+  triggerDownload(current);
 });
 
 if (retryBtn) retryBtn.onclick = e => {
@@ -621,13 +690,14 @@ drop.addEventListener("drop", e => {
 });
 
 /* ════════════════════════════════════════
-   PWA INSTALL
+   PWA INSTALL - iOS fix included
 ════════════════════════════════════════ */
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   installPrompt = e;
   if (!isIOS()) install.classList.remove("hidden");
 });
+
 install.onclick = async () => {
   if (!installPrompt) return;
   installPrompt.prompt();
@@ -635,6 +705,7 @@ install.onclick = async () => {
   installPrompt = null;
   install.classList.add("hidden");
 };
+
 if (iosDismiss) {
   iosDismiss.onclick = () => {
     iosInstall?.classList.add("hidden");
@@ -654,7 +725,7 @@ if ("serviceWorker" in navigator) {
       swReg.addEventListener("updatefound", () => {
         newSW = swReg.installing;
         newSW.addEventListener("statechange", () => {
-          if (newSW.state === "installed" && navigator.serviceWorker.controller)
+          if (newSW.state==="installed" && navigator.serviceWorker.controller)
             showUpdateBanner();
         });
       });
@@ -676,17 +747,15 @@ async function onStartup() {
   checkVersion();
   updateQ();
   setInterval(updateQ, 30000);
-
-  // Banner initially hidden
   hideBannerAd(0);
-
   setTimeout(() => notifySWVisible(), 1000);
 
-  if (isIOS() && !isStandalone() && !localStorage.getItem("qs_ios_dismissed"))
+  // iOS install prompt
+  if (isIOS() && !isStandalone() && !localStorage.getItem("qs_ios_dismissed")) {
     setTimeout(() => iosInstall?.classList.remove("hidden"), 3000);
+  }
 
   const params = new URLSearchParams(location.search);
-
   const shared = (
     params.get("url") || params.get("text") || params.get("title") || ""
   ).trim();
@@ -719,15 +788,11 @@ async function onStartup() {
 ════════════════════════════════════════ */
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible") return;
-
   notifySWVisible();
-
   if (autoProc) return;
-
   swReg?.update();
   checkVersion();
   updateQ();
-
   if (!isAutoOn()) return;
   await new Promise(r => setTimeout(r, 400));
   const auto = await tryAutoPaste();
