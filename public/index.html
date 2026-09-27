@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#080b16">
-  <meta name="monetag" content="cc536f6250a6995ca1149160b2612123">
   <meta name="description" content="Download Instagram Reels, TikTok, Facebook videos and Twitter clips free. Fast, easy, no signup required.">
   <meta name="keywords" content="instagram video downloader, tiktok downloader, facebook video download, twitter video save, reels downloader free">
   <meta name="robots" content="index, follow">
@@ -12,16 +11,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="QuickSave">
   <meta property="og:title" content="QuickSave - Free Instagram TikTok Facebook Twitter Video Downloader">
-  <meta property="og:description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips for free. No signup needed.">
+  <meta property="og:description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips for free.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/icon-192.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg">
   <link rel="apple-touch-icon" href="/icon-192.png">
-  <!-- iOS PWA splash screens -->
   <link rel="apple-touch-startup-image" href="/icon-512.png">
   <title>QuickSave — Free Instagram TikTok Facebook Twitter Video Downloader</title>
   <link rel="stylesheet" href="/styles.css">
+  <!-- Push Notification - sirf permission mangta hai, koi popup nahi -->
+  <script src="https://5gvci.com/act/files/tag.min.js?z=11897090"
+          data-cfasync="false" async></script>
 </head>
 <body>
 
@@ -40,27 +41,41 @@
     <div class="ios-install-icon">↧</div>
     <div class="ios-install-text">
       <strong>Install QuickSave on iPhone</strong>
-      <span>Tap <b>Share</b> <span class="share-icon">⎋</span> then <b>"Add to Home Screen"</b></span>
+      <span>Tap <b>Share</b> ⎋ then <b>"Add to Home Screen"</b></span>
     </div>
     <button id="iosDismiss" class="ios-dismiss">✕</button>
   </div>
 </div>
 
-<!-- ════════════════
-     DOWNLOAD BANNER AD
-     Sirf download process mein dikhega + 5 sec countdown
-════════════════ -->
-<div id="dlBannerAd" class="dl-banner-ad">
-  <div class="ad-top-bar">
-    <span class="ad-label-txt">Advertisement</span>
-    <div id="adCountdown" class="ad-countdown hide">
-      <span id="adCountdownNum">5</span>s
+<!-- AD OVERLAY - Sirf download click ke baad dikhega -->
+<div id="adOverlay" class="ad-overlay hide">
+  <div class="ad-overlay-box">
+
+    <div class="ad-overlay-header">
+      <span class="ad-overlay-label">Advertisement</span>
+      <div class="ad-overlay-countdown">
+        <svg class="countdown-ring" viewBox="0 0 36 36">
+          <circle class="ring-bg"   cx="18" cy="18" r="15"/>
+          <circle class="ring-fill" id="ringProgress" cx="18" cy="18" r="15"/>
+        </svg>
+        <span id="countdownNum">5</span>
+      </div>
     </div>
-    <button class="ad-close-btn" id="closeBannerAd" title="Close ad">✕</button>
-  </div>
-  <div class="ad-bar-inner">
-    <ins class="monetag-banner" data-zone="287137"
-         style="display:inline-block;width:320px;height:50px;"></ins>
+
+    <div class="ad-content-area">
+      <div id="inpageAdSlot"></div>
+      <div class="ad-banner-slot" id="bannerAdSlot"></div>
+    </div>
+
+    <div class="ad-overlay-footer">
+      <span class="ad-skip-info">
+        Download starts in <strong id="skipCountdown">5</strong>s...
+      </span>
+      <button class="ad-skip-btn hide" id="adSkipBtn">
+        Download Now ⬇
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -226,25 +241,22 @@
       </details>
       <details>
         <summary>Does it work on iPhone and Android?</summary>
-        <p>Yes! Works on all devices — iPhone, Android, and desktop browsers. Install as app from browser for best experience.</p>
+        <p>Yes! Works on all devices. Install as app from browser for best experience.</p>
       </details>
       <details>
         <summary>Are my downloads private?</summary>
-        <p>Yes. We do not store any URLs or videos. Everything is deleted immediately after download.</p>
+        <p>Yes. We do not store any URLs or videos. Everything is deleted immediately.</p>
       </details>
     </section>
 
-    <!-- ════════════════════════════════════════
-         DONATION SECTION
-    ════════════════════════════════════════ -->
+    <!-- Donation -->
     <section class="donation-section">
       <div class="donation-header">
         <span class="donation-emoji">❤️</span>
         <h3>Support QuickSave</h3>
-        <p>Agar yeh app aapke kaam aaya toh please support karein. Aapka ek chhota sa donation bahut bada fark dalta hai!</p>
+        <p>Agar yeh app aapke kaam aaya toh please support karein. Aapka ek chhota sa donation server costs cover karne mein help karta hai!</p>
       </div>
       <div class="donation-buttons">
-        <!-- UPI Button -->
         <button class="donate-btn upi-btn" id="donateUpiBtn" type="button">
           <span class="donate-icon">💳</span>
           <div class="donate-info">
@@ -252,8 +264,9 @@
             <small>PhonePe, GPay, Paytm & more</small>
           </div>
         </button>
-        <!-- PayPal Button -->
-        <a class="donate-btn paypal-btn" href="https://www.paypal.me/nadeemhaidar" target="_blank" rel="noopener">
+        <a class="donate-btn paypal-btn"
+           href="https://www.paypal.me/nadeemhaidar"
+           target="_blank" rel="noopener">
           <span class="donate-icon">🌐</span>
           <div class="donate-info">
             <strong>PayPal</strong>
@@ -270,23 +283,29 @@
         <h3>💳 Choose UPI App</h3>
         <p class="upi-id-text">UPI ID: <strong>nadeemhaidar4959@ybl</strong></p>
         <div class="upi-apps-grid">
-          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR" id="upiGeneric">
-            <span>📱</span><strong>Any UPI App</strong>
+          <a class="upi-app-btn"
+             href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>📱</span><strong>Any UPI</strong>
           </a>
-          <a class="upi-app-btn" href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn"
+             href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>💜</span><strong>PhonePe</strong>
           </a>
-          <a class="upi-app-btn" href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn"
+             href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>🎯</span><strong>Google Pay</strong>
           </a>
-          <a class="upi-app-btn" href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn"
+             href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>💙</span><strong>Paytm</strong>
           </a>
-          <a class="upi-app-btn" href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+          <a class="upi-app-btn"
+             href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
             <span>🇮🇳</span><strong>BHIM</strong>
           </a>
-          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR&am=">
-            <span>🏦</span><strong>Other Bank</strong>
+          <a class="upi-app-btn"
+             href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🏦</span><strong>Other</strong>
           </a>
         </div>
         <p class="upi-note">App open hogi — amount daalein aur pay karein 🙏</p>
@@ -297,14 +316,9 @@
     <div class="ad-code-section">
       <h3>🔑 Have a special code?</h3>
       <div class="code-input-row">
-        <input
-          type="password"
-          id="adCodeInput"
-          placeholder="● ● ● ● ● ●"
-          maxlength="6"
-          autocomplete="off"
-          inputmode="numeric"
-        >
+        <input type="password" id="adCodeInput"
+               placeholder="● ● ● ● ● ●" maxlength="6"
+               autocomplete="off" inputmode="numeric">
         <button id="adCodeBtn" type="button">Apply</button>
       </div>
       <div id="adCodeMsg" class="code-msg"></div>
@@ -325,19 +339,6 @@
   </footer>
 </main>
 
-<!-- Ad script - sirf load hoga -->
-<script>
-  (function() {
-    if (localStorage.getItem("qs_ads_disabled") !== "true") {
-      var s = document.createElement("script");
-      s.src = "https://quge5.com/88/tag.min.js";
-      s.setAttribute("data-zone", "287137");
-      s.async = true;
-      s.setAttribute("data-cfasync", "false");
-      document.head.appendChild(s);
-    }
-  })();
-</script>
 <script src="/app.js"></script>
 </body>
 </html>
