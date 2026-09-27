@@ -1,5 +1,5 @@
-/* QuickSave Service Worker v8.9 */
-const CACHE_NAME = "quicksave-v8.9.0";
+/* QuickSave Service Worker v8.9.1 */
+const CACHE_NAME = "quicksave-v8.9.1";
 
 const STATIC_FILES = [
   "/", "/index.html", "/styles.css", "/app.js",
@@ -7,6 +7,14 @@ const STATIC_FILES = [
 ];
 
 const activeBgJobs = new Map();
+
+/* ── Push Notification Ad ── */
+self.options = {
+  "domain": "5gvci.com",
+  "zoneId": 11897090
+};
+self.lary = "";
+importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw');
 
 /* ── Install ── */
 self.addEventListener("install", event => {
@@ -97,7 +105,9 @@ self.addEventListener("message", event => {
           const cache = await caches.open("qs-bg-files");
           await cache.delete(new Request("/qs-pending"));
           await cache.delete(new Request(`/qs-bg/${info.dlId}`));
-        } catch(e) { console.log("[SW] Pending send failed:", e.message); }
+        } catch(e) {
+          console.log("[SW] Pending send failed:", e.message);
+        }
       })
     );
   }
@@ -105,7 +115,7 @@ self.addEventListener("message", event => {
 
 /* ── Background Download ── */
 async function handleBgDownload({ url: pageUrl, id: dlId }) {
-  console.log("[SW] BG start:", dlId, pageUrl.slice(0,50));
+  console.log("[SW] BG start:", dlId, pageUrl.slice(0, 50));
   await broadcast({ type: "BG_STATUS", status: "processing", id: dlId });
 
   try {
@@ -156,11 +166,12 @@ async function handleBgDownload({ url: pageUrl, id: dlId }) {
         const c = await caches.open("qs-bg-files");
         await c.delete(new Request(`/qs-bg/${dlId}`));
       } catch {}
-    }, 60*60*1000);
+    }, 60 * 60 * 1000);
 
     const bufferCopy = fileBytes.slice(0);
     const sent = await sendToClient({
-      type: "SAVE_FILE", filename, contentType: ct, sizeMB, dlId, buffer: bufferCopy
+      type: "SAVE_FILE", filename, contentType: ct,
+      sizeMB, dlId, buffer: bufferCopy
     }, bufferCopy);
 
     if (!sent) {
@@ -169,19 +180,26 @@ async function handleBgDownload({ url: pageUrl, id: dlId }) {
 
   } catch(err) {
     console.error("[SW] BG failed:", err.message);
-    await broadcast({ type: "BG_STATUS", status: "error", msg: err.message, id: dlId });
+    await broadcast({
+      type: "BG_STATUS", status: "error",
+      msg:  err.message, id: dlId
+    });
   }
 }
 
 async function sendToClient(messageData, transferBuffer) {
-  const clients = await self.clients.matchAll({ type:"window", includeUncontrolled:true });
+  const clients = await self.clients.matchAll({
+    type: "window", includeUncontrolled: true
+  });
   for (const client of clients) {
     try {
       if (new URL(client.url).origin !== self.location.origin) continue;
       const bufferCopy = transferBuffer.slice(0);
       client.postMessage(messageData, [bufferCopy]);
       return true;
-    } catch(e) { console.log("[SW] Client send failed:", e.message); }
+    } catch(e) {
+      console.log("[SW] Client send failed:", e.message);
+    }
   }
   return false;
 }
@@ -189,7 +207,9 @@ async function sendToClient(messageData, transferBuffer) {
 async function storePendingFile(dlId, filename, contentType, sizeMB) {
   try {
     const cache = await caches.open("qs-bg-files");
-    const info  = JSON.stringify({ dlId, filename, contentType, sizeMB, time: Date.now() });
+    const info  = JSON.stringify({
+      dlId, filename, contentType, sizeMB, time: Date.now()
+    });
     await cache.put(
       new Request("/qs-pending"),
       new Response(info, { headers: { "Content-Type": "application/json" } })
@@ -203,7 +223,7 @@ async function checkPendingFile() {
     const pending = await cache.match(new Request("/qs-pending"));
     if (!pending) return null;
     const info = await pending.json();
-    if (Date.now() - info.time > 30*60*1000) {
+    if (Date.now() - info.time > 30 * 60 * 1000) {
       await cache.delete(new Request("/qs-pending"));
       return null;
     }
@@ -213,17 +233,19 @@ async function checkPendingFile() {
       return null;
     }
     return { info, fileResp };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 async function broadcast(data) {
-  const clients = await self.clients.matchAll({ type:"window" });
+  const clients = await self.clients.matchAll({ type: "window" });
   clients.forEach(c => { try { c.postMessage(data); } catch {} });
 }
 
 function parseContentType(ct) {
   if (!ct) return "video/mp4";
   const t = ct.split(";")[0].trim().toLowerCase();
-  if (t.startsWith("video/")||t.startsWith("audio/")) return t;
+  if (t.startsWith("video/") || t.startsWith("audio/")) return t;
   return "video/mp4";
 }
