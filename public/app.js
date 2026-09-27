@@ -1,5 +1,5 @@
-/* QuickSave app.js v8.7 */
-console.log("QuickSave v8.7 loaded");
+/* QuickSave app.js v8.8 */
+console.log("QuickSave v8.8 loaded");
 
 const AD_DISABLE_CODE = "666666";
 const $ = id => document.getElementById(id);
@@ -24,10 +24,6 @@ const url            = $("url"),
       autoToggle     = $("autoToggle"),
       autoLabel      = $("autoLabel"),
       retryBtn       = $("retryBtn"),
-      adAfterDl      = $("adAfterDl"),
-      interstitialAd = $("interstitialAd"),
-      closeBtn       = $("closeInterstitial"),
-      adTimerEl      = $("adTimer"),
       queueStatus    = $("queueStatus"),
       queueText      = $("queueText"),
       updateBanner   = $("updateBanner"),
@@ -36,7 +32,9 @@ const url            = $("url"),
       adCodeMsg      = $("adCodeMsg"),
       bgStatus       = $("bgStatus"),
       bgStatusText   = $("bgStatusText"),
-      bgStatusIcon   = $("bgStatusIcon");
+      bgStatusIcon   = $("bgStatusIcon"),
+      dlBannerAd     = $("dlBannerAd"),
+      closeBannerAd  = $("closeBannerAd");
 
 let current       = null;
 let installPrompt = null;
@@ -44,6 +42,7 @@ let autoProc      = false;
 let lastUrl       = "";
 let swReg         = null;
 let newSW         = null;
+let bannerAdTimer = null; // Banner auto-hide timer
 
 /* ════════════════════════════════════════
    UTILS
@@ -87,7 +86,50 @@ function msg(t, c="") {
 }
 
 /* ════════════════════════════════════════
-   SMART FILENAME - Auto rename duplicates
+   BANNER AD - Download ke time dikhao
+════════════════════════════════════════ */
+function showBannerAd() {
+  // Ads off hain toh mat dikhao
+  if (isAdsOff()) return;
+  if (!dlBannerAd) return;
+
+  // Pehle se show ho raha hai
+  if (dlBannerAd.classList.contains("show")) return;
+
+  dlBannerAd.classList.add("show");
+  document.body.classList.add("ad-banner-active");
+
+  // Pehla auto-hide timer cancel karo agar tha
+  if (bannerAdTimer) clearTimeout(bannerAdTimer);
+
+  console.log("[ad] Banner shown - download started");
+}
+
+function hideBannerAd(delay = 0) {
+  if (!dlBannerAd) return;
+
+  if (bannerAdTimer) clearTimeout(bannerAdTimer);
+
+  if (delay > 0) {
+    bannerAdTimer = setTimeout(() => {
+      dlBannerAd.classList.remove("show");
+      document.body.classList.remove("ad-banner-active");
+      console.log("[ad] Banner hidden");
+    }, delay);
+  } else {
+    dlBannerAd.classList.remove("show");
+    document.body.classList.remove("ad-banner-active");
+    console.log("[ad] Banner hidden");
+  }
+}
+
+// Close button
+closeBannerAd?.addEventListener("click", () => {
+  hideBannerAd(0);
+});
+
+/* ════════════════════════════════════════
+   SMART FILENAME
 ════════════════════════════════════════ */
 function getSmartFilename(filename) {
   const key       = "qs_dl_names";
@@ -115,9 +157,6 @@ function getSmartFilename(filename) {
 
 /* ════════════════════════════════════════
    SAVE FILE
-   Blob URL → a.click()
-   Chrome shows "Download complete" naturally
-   We show NO extra notification
 ════════════════════════════════════════ */
 async function saveFileToDevice(buffer, filename, contentType) {
   if (!buffer || buffer.byteLength < 1000) {
@@ -193,8 +232,10 @@ function setAdsOff(v) {
 }
 function applyAds() {
   const off = isAdsOff();
-  document.querySelectorAll(".ad-wrap,.interstitial-overlay,[data-ad]")
-    .forEach(el => el.classList.toggle("ads-hidden", off));
+
+  // Agar ads off hain toh banner bhi chhupao
+  if (off) hideBannerAd(0);
+
   if (adCodeMsg) {
     adCodeMsg.textContent = off ? "✅ Ads disabled" : "";
     adCodeMsg.className   = off ? "code-msg ok" : "code-msg";
@@ -250,6 +291,8 @@ function setupSWMessages() {
       switch(d.status) {
         case "processing":
           showBg("Processing your video...", "processing", "⏳");
+          // Processing shuru - banner dikhao
+          showBannerAd();
           break;
         case "downloading":
           showBg(`Downloading ${d.filename || "video"}...`, "downloading", "⬇");
@@ -257,12 +300,13 @@ function setupSWMessages() {
         case "error":
           showBg(d.msg || "Download failed. Please try again.", "err", "❌");
           hideBg(5000);
+          // Error pe banner chhupao
+          hideBannerAd(3000);
           break;
       }
       return;
     }
 
-    /* File ready - save karo */
     if (d.type === "SAVE_FILE") {
       console.log("[App] Got file:", d.filename, d.sizeMB+"MB");
       showBg(`Saving ${d.filename}...`, "downloading", "⬇");
@@ -272,10 +316,13 @@ function setupSWMessages() {
         showBg(`✅ "${savedName}" saved!`, "ok", "✅");
         msg("✅ Video saved to Downloads!", "ok");
         hideBg(6000);
+        // Save ho gaya - banner 5 sec baad chhupao
+        hideBannerAd(5000);
       } catch(e) {
         console.error("[App] Save failed:", e.message);
         showBg(`Save failed: ${e.message}`, "err", "❌");
         hideBg(5000);
+        hideBannerAd(3000);
       }
     }
   });
@@ -283,8 +330,6 @@ function setupSWMessages() {
 
 /* ════════════════════════════════════════
    TELL SW WE ARE VISIBLE
-   Jab app visible ho - SW ko batao
-   SW pending file send karega agar koi hai
 ════════════════════════════════════════ */
 function notifySWVisible() {
   if (!swReg?.active) return;
@@ -325,31 +370,6 @@ async function handleShare(sharedUrl) {
     if (ok) return;
   }
   await processUrl(sharedUrl, true);
-}
-
-/* ════════════════════════════════════════
-   INTERSTITIAL AD
-════════════════════════════════════════ */
-function showAd(cb) {
-  if (isAdsOff() || !interstitialAd) { cb?.(); return; }
-  interstitialAd.classList.remove("hide");
-  document.body.style.overflow = "hidden";
-  let s = 5;
-  if (adTimerEl) adTimerEl.textContent = s;
-  const t = setInterval(() => {
-    s--;
-    if (adTimerEl) adTimerEl.textContent = s;
-    if (s <= 0) { clearInterval(t); closeAd(); cb?.(); }
-  }, 1000);
-  function closeAd() {
-    clearInterval(t);
-    interstitialAd.classList.add("hide");
-    document.body.style.overflow = "";
-  }
-  if (closeBtn) closeBtn.onclick = () => { closeAd(); cb?.(); };
-  interstitialAd.onclick = e => {
-    if (e.target === interstitialAd) { closeAd(); cb?.(); }
-  };
 }
 
 /* ════════════════════════════════════════
@@ -405,7 +425,9 @@ async function processUrl(value, autoDownload=false) {
   go.disabled = true;
   result.classList.add("hide");
   progress.classList.add("hide");
-  adAfterDl?.classList.add("hide");
+
+  // Inspect shuru pe banner mat dikhao - sirf download pe dikhega
+  hideBannerAd(0);
 
   const btnTxt = [...go.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
   if (btnTxt) btnTxt.textContent = "Checking... ";
@@ -449,6 +471,8 @@ async function processUrl(value, autoDownload=false) {
   } catch(e) {
     console.error(e);
     msg("❌ " + (e.message || "Something went wrong."), "err");
+    // Error pe ensure banner chhupa rahe
+    hideBannerAd(0);
   } finally {
     go.disabled = false;
     autoProc    = false;
@@ -462,7 +486,9 @@ async function processUrl(value, autoDownload=false) {
 ════════════════════════════════════════ */
 async function startDownload(d) {
   progress.classList.remove("hide");
-  if (adAfterDl && !isAdsOff()) adAfterDl.classList.remove("hide");
+
+  // ✅ Download shuru hote hi banner dikhao
+  showBannerAd();
 
   progressText.textContent = "Downloading...";
   bar.style.width          = "15%";
@@ -474,6 +500,8 @@ async function startDownload(d) {
       bar.style.width          = "100%";
       progressPct.textContent  = "100%";
       progressText.textContent = "Tap and hold the video to save to Photos.";
+      // iOS pe 5 sec baad banner chhupao
+      hideBannerAd(5000);
     }, 800);
     return;
   }
@@ -498,17 +526,22 @@ async function startDownload(d) {
     progressText.textContent = `✅ "${savedName}" saved to Downloads!`;
     msg("✅ Video saved!", "ok");
 
+    // ✅ Download complete - banner 5 sec baad chhupao
+    hideBannerAd(5000);
+
   } catch(e) {
     console.error("[download]", e.message);
     progressText.textContent = "Download failed. Please try again.";
     msg("❌ " + e.message, "err");
+    // Error pe banner turant chhupao
+    hideBannerAd(2000);
   }
 }
 
 function triggerDownload(d) {
   if (!d?.id) return;
-  if (isPWA() && !isAdsOff()) showAd(() => startDownload(d));
-  else startDownload(d);
+  // Ads on/off ka koi interstitial nahi - seedha download
+  startDownload(d);
 }
 
 /* ════════════════════════════════════════
@@ -564,8 +597,7 @@ url.onkeydown = e => {
 downloadBtn.addEventListener("click", e => {
   if (!current?.id) return;
   e.preventDefault();
-  if (isPWA() && !isAdsOff()) showAd(() => startDownload(current));
-  else startDownload(current);
+  startDownload(current);
 });
 
 if (retryBtn) retryBtn.onclick = e => {
@@ -645,7 +677,9 @@ async function onStartup() {
   updateQ();
   setInterval(updateQ, 30000);
 
-  /* SW ko batao hum visible hain - pending file check */
+  // Banner initially hidden
+  hideBannerAd(0);
+
   setTimeout(() => notifySWVisible(), 1000);
 
   if (isIOS() && !isStandalone() && !localStorage.getItem("qs_ios_dismissed"))
@@ -653,14 +687,12 @@ async function onStartup() {
 
   const params = new URLSearchParams(location.search);
 
-  /* Share target */
   const shared = (
     params.get("url") || params.get("text") || params.get("title") || ""
   ).trim();
 
   if (shared && isSupportedUrl(shared)) {
     history.replaceState({}, "", "/");
-    /* SW ready hone ka thoda wait */
     await new Promise(r => setTimeout(r, 800));
     await handleShare(shared);
     return;
@@ -672,7 +704,6 @@ async function onStartup() {
     return;
   }
 
-  /* Auto paste */
   if (isAutoOn()) {
     const auto = await tryAutoPaste();
     if (auto) {
@@ -684,14 +715,11 @@ async function onStartup() {
 }
 
 /* ════════════════════════════════════════
-   VISIBILITY CHANGE - KEY FIX
-   Jab user wapas aaye - SW ko batao
-   Pending file agar ho to mil jayegi
+   VISIBILITY CHANGE
 ════════════════════════════════════════ */
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible") return;
 
-  /* SW ko batao visible hain - pending file bheje */
   notifySWVisible();
 
   if (autoProc) return;
