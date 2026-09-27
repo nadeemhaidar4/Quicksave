@@ -1,14 +1,17 @@
-/* QuickSave Service Worker v8.9.1 */
-const CACHE_NAME = "quicksave-v8.9.1";
+/* QuickSave Service Worker v8.9.2 */
+const CACHE_NAME = "quicksave-v8.9.2";
 
 const STATIC_FILES = [
   "/", "/index.html", "/styles.css", "/app.js",
-  "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png"
+  "/manifest.webmanifest",
+  "/icon.svg", "/icon.svg?v=2",
+  "/icon-192.png", "/icon-192.png?v=2",
+  "/icon-512.png", "/icon-512.png?v=2"
 ];
 
 const activeBgJobs = new Map();
 
-/* ── Push Notification Ad ── */
+/* Push Notification */
 self.options = {
   "domain": "5gvci.com",
   "zoneId": 11897090
@@ -30,9 +33,18 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys.filter(k => k !== CACHE_NAME).map(k => {
+          console.log("[SW] Deleting old cache:", k);
+          return caches.delete(k);
+        })
       ))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window" }))
+      .then(clients => {
+        clients.forEach(client => {
+          try { client.postMessage({ type: "SW_UPDATED" }); } catch {}
+        });
+      })
   );
 });
 
@@ -92,7 +104,6 @@ self.addEventListener("message", event => {
         if (!pending) return;
         const { info, fileResp } = pending;
         const fileBytes = await fileResp.arrayBuffer();
-        console.log("[SW] Sending pending file to visible client");
         try {
           event.source.postMessage({
             type:        "SAVE_FILE",
@@ -147,7 +158,6 @@ async function handleBgDownload({ url: pageUrl, id: dlId }) {
     if (fileBytes.byteLength < 5000) throw new Error("File too small, try again");
 
     const sizeMB = (fileBytes.byteLength / 1024 / 1024).toFixed(1);
-    console.log("[SW] File ready:", sizeMB + "MB", ct);
 
     const bgCache = await caches.open("qs-bg-files");
     await bgCache.put(
