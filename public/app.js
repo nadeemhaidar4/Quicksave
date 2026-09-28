@@ -1,9 +1,8 @@
-/* QuickSave app.js v8.9.3 */
-console.log("QuickSave v8.9.3 loaded");
+/* QuickSave app.js v8.9.4 */
+console.log("QuickSave v8.9.4 loaded");
 
-const AD_DISABLE_CODE = "666666";
-const AD_SECONDS      = 5;
-const ICON_VERSION    = "2";
+const AD_SECONDS  = 5;
+const ICON_VERSION = "2";
 const $ = id => document.getElementById(id);
 
 /* ── Elements ── */
@@ -30,9 +29,6 @@ const url           = $("url"),
       queueStatus   = $("queueStatus"),
       queueText     = $("queueText"),
       updateBanner  = $("updateBanner"),
-      adCodeInput   = $("adCodeInput"),
-      adCodeBtn     = $("adCodeBtn"),
-      adCodeMsg     = $("adCodeMsg"),
       bgStatus      = $("bgStatus"),
       bgStatusText  = $("bgStatusText"),
       bgStatusIcon  = $("bgStatusIcon"),
@@ -46,16 +42,16 @@ const url           = $("url"),
       upiModal      = $("upiModal"),
       upiModalClose = $("upiModalClose");
 
-let current       = null;
-let installPrompt = null;
-let autoProc      = false;
-let lastUrl       = "";
-let swReg         = null;
-let newSW         = null;
-let adTimer       = null;
-let adCallback    = null;
-let adsInjected   = false;
-let resultAdsShown = false; /* Result card ads track karo */
+let current        = null;
+let installPrompt  = null;
+let autoProc       = false;
+let lastUrl        = "";
+let swReg          = null;
+let newSW          = null;
+let adTimer        = null;
+let adCallback     = null;
+let adsInjected    = false;
+let resultAdsShown = false;
 
 const RING_CIRC = 94.25;
 
@@ -165,58 +161,16 @@ function showIconUpdatePrompt() {
 }
 
 /* ════════════════════════════════════════
-   AD MANAGEMENT
-════════════════════════════════════════ */
-function isAdsOff() {
-  return localStorage.getItem("qs_ads_disabled") === "true";
-}
-function setAdsOff(v) {
-  localStorage.setItem("qs_ads_disabled", v ? "true" : "false");
-}
-
-adCodeBtn?.addEventListener("click", () => {
-  const c = (adCodeInput?.value || "").trim();
-  if (c === AD_DISABLE_CODE) {
-    setAdsOff(true);
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "✅ Ads disabled!";
-      adCodeMsg.className   = "code-msg ok";
-    }
-  } else if (c === "000000") {
-    setAdsOff(false);
-    adsInjected    = false;
-    resultAdsShown = false;
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "Ads enabled.";
-      adCodeMsg.className   = "code-msg";
-    }
-  } else {
-    if (adCodeMsg) {
-      adCodeMsg.textContent = "❌ Invalid code.";
-      adCodeMsg.className   = "code-msg err";
-    }
-  }
-  if (adCodeInput) adCodeInput.value = "";
-});
-
-adCodeInput?.addEventListener("keydown", e => {
-  if (e.key === "Enter") adCodeBtn?.click();
-});
-
-/* ════════════════════════════════════════
    RESULT CARD ADS
-   - Sirf tab inject karo jab result ready ho
+   - Sirf tab dikhao jab result ready ho
    - Download shuru hone se pehle hide karo
 ════════════════════════════════════════ */
 function showResultAds() {
-  /* Agar ads off hain ya already shown hain toh skip */
-  if (isAdsOff() || !resultBannerAd) return;
+  if (!resultBannerAd) return;
 
-  /* Pehli baar inject karo */
+  /* Pehli baar In-Page Push inject karo */
   if (!adsInjected) {
     adsInjected = true;
-
-    /* In-Page Push ad - sirf ek baar */
     try {
       const s = document.createElement("script");
       s.dataset.zone = "11897091";
@@ -230,13 +184,11 @@ function showResultAds() {
     }
   }
 
-  /* Result banner ad - sirf result card mein show karo */
+  /* Result banner ad */
   if (!resultAdsShown) {
     resultAdsShown = true;
     resultBannerAd.classList.remove("hide");
-
     try {
-      /* Banner ad inject karo */
       const ins = document.createElement("ins");
       ins.className = "monetag-ad";
       ins.setAttribute("data-zone", "287137");
@@ -256,13 +208,11 @@ function showResultAds() {
       showResultFallbackAd();
     }
   } else {
-    /* Already injected - sirf visible karo */
     resultBannerAd.classList.remove("hide");
   }
 }
 
 function hideResultAds() {
-  /* Download hone wali hai - ads hide karo */
   if (resultBannerAd) {
     resultBannerAd.classList.add("hide");
   }
@@ -288,12 +238,6 @@ function showResultFallbackAd() {
    AD OVERLAY - Download click ke baad
 ════════════════════════════════════════ */
 function showAdOverlay(onComplete) {
-  if (isAdsOff()) {
-    /* Ads off hain - seedha download */
-    if (onComplete) onComplete();
-    return;
-  }
-
   adCallback = onComplete || null;
 
   adOverlay.classList.remove("hide");
@@ -618,7 +562,7 @@ async function processUrl(value, autoDownload = false) {
   url.value   = value;
   go.disabled = true;
 
-  /* Naya URL process ho raha hai - ads reset karo */
+  /* Naya URL - ads reset */
   resultAdsShown = false;
   hideResultAds();
   result.classList.add("hide");
@@ -668,7 +612,7 @@ async function processUrl(value, autoDownload = false) {
     result.classList.remove("hide");
     msg("Ready! Tap the button below to download.", "ok");
 
-    /* ✅ Result ready - ab ads dikhao (sirf yahan) */
+    /* ✅ Result ready - ads dikhao */
     showResultAds();
 
     if (autoDownload && isAutoOn()) {
@@ -688,10 +632,9 @@ async function processUrl(value, autoDownload = false) {
 
 /* ════════════════════════════════════════
    ACTUAL DOWNLOAD
-   - Shuru hone se pehle ads hide karo
 ════════════════════════════════════════ */
 async function doActualDownload(d) {
-  /* ✅ Download shuru - result ads band karo */
+  /* ✅ Download shuru - ads hide karo */
   hideResultAds();
 
   progress.classList.remove("hide");
@@ -744,7 +687,6 @@ async function doActualDownload(d) {
 ════════════════════════════════════════ */
 function triggerDownload(d) {
   if (!d?.id) return;
-  /* Ad overlay dikhao - iske andar download start hoga */
   showAdOverlay(() => doActualDownload(d));
 }
 
@@ -886,12 +828,6 @@ if ("serviceWorker" in navigator) {
 ════════════════════════════════════════ */
 async function onStartup() {
   setAuto(isAutoOn());
-
-  if (isAdsOff() && adCodeMsg) {
-    adCodeMsg.textContent = "✅ Ads disabled";
-    adCodeMsg.className   = "code-msg ok";
-  }
-
   checkVersion();
   checkIconUpdate();
   updateQ();
