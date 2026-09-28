@@ -1,6 +1,6 @@
-/* QuickSave Service Worker v8.9.3 */
-/* Push Notification REMOVED - notifications band kar diye */
-const CACHE_NAME = "quicksave-v8.9.3";
+/* QuickSave Service Worker v8.9.5 */
+/* Push Notifications REMOVED - notification ads band */
+const CACHE_NAME = "quicksave-v8.9.5";
 
 const STATIC_FILES = [
   "/", "/index.html", "/styles.css", "/app.js",
