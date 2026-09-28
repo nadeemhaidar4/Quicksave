@@ -1,5 +1,5 @@
-/* QuickSave app.js v8.9.4 */
-console.log("QuickSave v8.9.4 loaded");
+/* QuickSave app.js v8.9.5 */
+console.log("QuickSave v8.9.5 loaded");
 
 const AD_SECONDS   = 5;
 const ICON_VERSION = "2";
@@ -37,21 +37,23 @@ const url            = $("url"),
       skipCountdown  = $("skipCountdown"),
       adSkipBtn      = $("adSkipBtn"),
       ringProgress   = $("ringProgress"),
+      bannerAdSlot   = $("bannerAdSlot"),
       resultBannerAd = $("resultBannerAd"),
       donateUpiBtn   = $("donateUpiBtn"),
       upiModal       = $("upiModal"),
       upiModalClose  = $("upiModalClose");
 
-let current        = null;
-let installPrompt  = null;
-let autoProc       = false;
-let lastUrl        = "";
-let swReg          = null;
-let newSW          = null;
-let adTimer        = null;
-let adCallback     = null;
-let adsInjected    = false;
-let resultAdsShown = false;
+let current           = null;
+let installPrompt     = null;
+let autoProc          = false;
+let lastUrl           = "";
+let swReg             = null;
+let newSW             = null;
+let adTimer           = null;
+let adCallback        = null;
+let adsInjected       = false;
+let resultAdsShown    = false;
+let overlayAdInjected = false;
 
 const RING_CIRC = 94.25;
 
@@ -208,6 +210,7 @@ function showResultAds() {
       showResultFallbackAd();
     }
   } else {
+    /* Already inject ho chuka - sirf visible karo */
     resultBannerAd.classList.remove("hide");
   }
 }
@@ -235,10 +238,62 @@ function showResultFallbackAd() {
 }
 
 /* ════════════════════════════════════════
+   OVERLAY AD INJECT
+   - Download click ke baad overlay mein
+     banner ad inject karo
+════════════════════════════════════════ */
+function injectOverlayAd() {
+  if (!bannerAdSlot) return;
+
+  /* Sirf ek baar inject karo */
+  if (overlayAdInjected) return;
+  overlayAdInjected = true;
+
+  try {
+    const ins = document.createElement("ins");
+    ins.className = "monetag-ad";
+    ins.setAttribute("data-zone", "287137");
+    bannerAdSlot.innerHTML = "";
+    bannerAdSlot.appendChild(ins);
+
+    const s = document.createElement("script");
+    s.src   = "https://quge5.com/88/tag.min.js";
+    s.setAttribute("data-zone", "287137");
+    s.setAttribute("data-cfasync", "false");
+    s.async   = true;
+    s.onerror = () => showOverlayFallbackAd();
+    document.body.appendChild(s);
+    console.log("[ad] Overlay banner injected");
+  } catch(e) {
+    console.log("[ad] Overlay banner error:", e.message);
+    showOverlayFallbackAd();
+  }
+}
+
+function showOverlayFallbackAd() {
+  if (!bannerAdSlot) return;
+  bannerAdSlot.innerHTML = `
+    <div class="fallback-ad">
+      <span>❤️</span>
+      <div>
+        <strong>Enjoying QuickSave?</strong>
+        <small>Support us with a donation</small>
+      </div>
+      <a href="https://www.paypal.me/nadeemhaidar"
+         target="_blank" rel="noopener"
+         class="fallback-ad-btn">Donate 💙</a>
+    </div>
+  `;
+}
+
+/* ════════════════════════════════════════
    AD OVERLAY - Download click ke baad
 ════════════════════════════════════════ */
 function showAdOverlay(onComplete) {
   adCallback = onComplete || null;
+
+  /* ✅ Overlay mein ad inject karo */
+  injectOverlayAd();
 
   adOverlay.classList.remove("hide");
   document.body.style.overflow = "hidden";
@@ -562,7 +617,7 @@ async function processUrl(value, autoDownload = false) {
   url.value   = value;
   go.disabled = true;
 
-  /* Naya URL - ads reset */
+  /* Naya URL - result ads reset */
   resultAdsShown = false;
   hideResultAds();
   result.classList.add("hide");
@@ -612,7 +667,7 @@ async function processUrl(value, autoDownload = false) {
     result.classList.remove("hide");
     msg("Ready! Tap the button below to download.", "ok");
 
-    /* ✅ Result ready - ads dikhao */
+    /* ✅ Result ready - result card ads dikhao */
     showResultAds();
 
     if (autoDownload && isAutoOn()) {
@@ -634,7 +689,7 @@ async function processUrl(value, autoDownload = false) {
    ACTUAL DOWNLOAD
 ════════════════════════════════════════ */
 async function doActualDownload(d) {
-  /* ✅ Download shuru - ads hide karo */
+  /* ✅ Download shuru - result ads hide karo */
   hideResultAds();
 
   progress.classList.remove("hide");
@@ -825,12 +880,9 @@ if ("serviceWorker" in navigator) {
 
 /* ════════════════════════════════════════
    STARTUP
-   ✅ Purana ad-disable flag yahan clear hota hai
-   Jis bhi user ne 666666 code lagaya tha
-   unka localStorage reset ho jayega
 ════════════════════════════════════════ */
 async function onStartup() {
-  /* Purana ad-disable bypass clear karo - sabke liye */
+  /* ✅ Purana ad-disable bypass clear karo - sabke liye */
   localStorage.removeItem("qs_ads_disabled");
 
   setAuto(isAutoOn());
