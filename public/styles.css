@@ -1,4 +1,4 @@
-/* QuickSave styles v8.9.1 */
+/* QuickSave styles v8.9.3 */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -153,23 +153,29 @@ input:checked + .slider::before { transform: translateX(20px); }
   animation: fadeIn .3s ease; border: 1px solid transparent;
 }
 .bg-status.hide { display: none !important; }
-.bg-status.processing { background: rgba(124,108,252,0.12); border-color: rgba(124,108,252,0.3); }
-.bg-status.downloading { background: rgba(0,150,255,0.1); border-color: rgba(0,150,255,0.3); }
-.bg-status.ok  { background: rgba(0,210,106,0.1); border-color: rgba(0,210,106,0.3); }
-.bg-status.err { background: rgba(255,60,80,0.1); border-color: rgba(255,60,80,0.3); }
+.bg-status.processing  { background: rgba(124,108,252,0.12); border-color: rgba(124,108,252,0.3); }
+.bg-status.downloading { background: rgba(0,150,255,0.1);    border-color: rgba(0,150,255,0.3); }
+.bg-status.ok          { background: rgba(0,210,106,0.1);    border-color: rgba(0,210,106,0.3); }
+.bg-status.err         { background: rgba(255,60,80,0.1);    border-color: rgba(255,60,80,0.3); }
 @keyframes fadeIn {
   from { opacity:0; transform:translateY(-8px); }
   to   { opacity:1; transform:translateY(0); }
 }
-.bg-icon { font-size: 26px; flex-shrink: 0; animation: bgSpin 2s linear infinite; }
-.bg-status.ok .bg-icon,
+.bg-icon {
+  font-size: 26px; flex-shrink: 0;
+  animation: bgSpin 2s linear infinite;
+}
+.bg-status.ok  .bg-icon,
 .bg-status.err .bg-icon { animation: none; }
 @keyframes bgSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 .bg-content { flex: 1; }
-.bg-content strong { display: block; font-size: 14px; color: #ddd; font-weight: 700; margin-bottom: 3px; }
+.bg-content strong {
+  display: block; font-size: 14px; color: #ddd;
+  font-weight: 700; margin-bottom: 3px;
+}
 #bgStatusText { font-size: 12px; color: #888; }
 
 /* ── iOS Install ── */
@@ -294,26 +300,7 @@ input:checked + .slider::before { transform: translateX(20px); }
   width: 320px; height: 50px;
 }
 
-/* Fallback */
-.fallback-ad {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(124,108,252,0.1), rgba(232,62,140,0.1));
-  border-radius: 12px; width: 100%;
-}
-.fallback-ad span { font-size: 24px; flex-shrink: 0; }
-.fallback-ad div { flex: 1; }
-.fallback-ad strong { display: block; font-size: 13px; color: #ddd; font-weight: 700; }
-.fallback-ad small  { font-size: 11px; color: #888; }
-.fallback-ad-btn {
-  background: #009cde; color: #fff; text-decoration: none;
-  padding: 7px 14px; border-radius: 8px;
-  font-size: 12px; font-weight: 700; white-space: nowrap;
-  flex-shrink: 0; transition: .2s;
-}
-.fallback-ad-btn:hover { background: #007bb5; }
-
-/* Footer */
+/* Ad Overlay Footer */
 .ad-overlay-footer {
   padding: 14px 18px;
   border-top: 1px solid rgba(255,255,255,0.05);
@@ -335,6 +322,25 @@ input:checked + .slider::before { transform: translateX(20px); }
   transform: translateY(-1px);
 }
 .ad-skip-btn.hide { display: none !important; }
+
+/* Fallback Ad */
+.fallback-ad {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(124,108,252,0.1), rgba(232,62,140,0.1));
+  border-radius: 12px; width: 100%;
+}
+.fallback-ad span   { font-size: 24px; flex-shrink: 0; }
+.fallback-ad div    { flex: 1; }
+.fallback-ad strong { display: block; font-size: 13px; color: #ddd; font-weight: 700; }
+.fallback-ad small  { font-size: 11px; color: #888; }
+.fallback-ad-btn {
+  background: #009cde; color: #fff; text-decoration: none;
+  padding: 7px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  flex-shrink: 0; transition: .2s;
+}
+.fallback-ad-btn:hover { background: #007bb5; }
 
 /* ── Hero ── */
 .hero { text-align: center; }
@@ -428,8 +434,14 @@ p {
 }
 .thumb:hover { transform: scale(1.06); box-shadow: 0 4px 20px rgba(124,108,252,.3); }
 .fileinfo { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.fileinfo small { font-size: 10px; color: #00d26a; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 5px; }
-.fileinfo b { font-size: 15px; color: #fff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fileinfo small {
+  font-size: 10px; color: #00d26a;
+  letter-spacing: 1.5px; font-weight: 700; margin-bottom: 5px;
+}
+.fileinfo b {
+  font-size: 15px; color: #fff; margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .fileinfo em { font-size: 12px; color: #666; font-style: normal; }
 
 /* ── Progress ── */
@@ -452,6 +464,24 @@ p {
   border-radius: 4px; width: 0%; transition: width .6s ease;
 }
 
+/* ── Result Banner Ad ── */
+/* Sirf tab dikhta hai jab link paste ho aur result ready ho */
+/* Download shuru hone se pehle hide ho jata hai */
+.result-banner-ad {
+  width: 100%;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: opacity 0.3s ease;
+}
+.result-banner-ad.hide { display: none !important; }
+
 /* ── Download Button ── */
 .download {
   display: block; text-align: center;
@@ -470,7 +500,10 @@ p {
 
 /* ── How To ── */
 .howto { max-width: 600px; margin: 48px auto 0; text-align: left; }
-.howto h2 { font-size: 20px; font-weight: 800; color: #eee; margin-bottom: 20px; text-align: center; }
+.howto h2 {
+  font-size: 20px; font-weight: 800; color: #eee;
+  margin-bottom: 20px; text-align: center;
+}
 .steps { display: flex; flex-direction: column; gap: 10px; }
 .step {
   display: flex; align-items: flex-start; gap: 16px;
@@ -509,7 +542,10 @@ p {
 
 /* ── FAQ ── */
 .faq { max-width: 600px; margin: 48px auto 0; }
-.faq h2 { font-size: 20px; font-weight: 800; color: #eee; margin-bottom: 16px; text-align: center; }
+.faq h2 {
+  font-size: 20px; font-weight: 800; color: #eee;
+  margin-bottom: 16px; text-align: center;
+}
 details {
   background: rgba(255,255,255,.02);
   border: 1px solid rgba(255,255,255,.06);
@@ -535,8 +571,8 @@ details p { padding: 0 18px 16px; font-size: 13px; color: #777; margin: 0; line-
   border: 1px solid rgba(124,108,252,0.2);
   border-radius: 20px; padding: 28px 24px; text-align: center;
 }
-.donation-header { margin-bottom: 20px; }
-.donation-emoji  { font-size: 36px; display: block; margin-bottom: 10px; }
+.donation-header  { margin-bottom: 20px; }
+.donation-emoji   { font-size: 36px; display: block; margin-bottom: 10px; }
 .donation-header h3 { font-size: 20px; font-weight: 800; color: #eee; margin-bottom: 10px; }
 .donation-header p  { font-size: 14px; color: #888; line-height: 1.6; margin: 0; }
 .donation-buttons { display: flex; flex-direction: column; gap: 12px; }
@@ -581,9 +617,9 @@ details p { padding: 0 18px 16px; font-size: 13px; color: #777; margin: 0; line-
   display: flex; align-items: center; justify-content: center; transition: .2s;
 }
 .upi-modal-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
-.upi-modal-box h3   { font-size: 18px; font-weight: 800; color: #eee; text-align: center; margin-bottom: 6px; }
-.upi-id-text        { text-align: center; font-size: 13px; color: #888; margin-bottom: 20px; }
-.upi-id-text strong { color: #7c6cfc; }
+.upi-modal-box h3    { font-size: 18px; font-weight: 800; color: #eee; text-align: center; margin-bottom: 6px; }
+.upi-id-text         { text-align: center; font-size: 13px; color: #888; margin-bottom: 20px; }
+.upi-id-text strong  { color: #7c6cfc; }
 .upi-apps-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 10px; margin-bottom: 16px;
@@ -605,7 +641,7 @@ details p { padding: 0 18px 16px; font-size: 13px; color: #777; margin: 0; line-
 .upi-app-btn strong { font-size: 12px; color: #ccc; font-weight: 600; text-align: center; }
 .upi-note { text-align: center; font-size: 12px; color: #666; line-height: 1.5; }
 
-/* ── Ad Code ── */
+/* ── Ad Code Section ── */
 .ad-code-section {
   max-width: 600px; margin: 32px auto 0;
   background: rgba(255,255,255,.02);
@@ -666,10 +702,11 @@ footer {
   .code-input-row { flex-direction: column; }
   .code-input-row input  { text-align: center; }
   .code-input-row button { width: 100%; }
-  .bg-status  { margin: 10px 0; }
+  .bg-status { margin: 10px 0; }
   .donation-section { padding: 20px 16px; }
   .upi-apps-grid { grid-template-columns: repeat(2, 1fr); }
   .ad-overlay-box { border-radius: 16px; }
   .ad-overlay-footer { flex-direction: column; text-align: center; gap: 10px; }
   .ad-skip-btn { width: 100%; display: flex; justify-content: center; }
+  .result-banner-ad { min-height: 50px; }
 }
