@@ -1,5 +1,6 @@
-/* QuickSave Service Worker v8.9.2 */
-const CACHE_NAME = "quicksave-v8.9.2";
+/* QuickSave Service Worker v8.9.3 */
+/* Push Notification REMOVED - notifications band kar diye */
+const CACHE_NAME = "quicksave-v8.9.3";
 
 const STATIC_FILES = [
   "/", "/index.html", "/styles.css", "/app.js",
@@ -10,14 +11,6 @@ const STATIC_FILES = [
 ];
 
 const activeBgJobs = new Map();
-
-/* Push Notification */
-self.options = {
-  "domain": "5gvci.com",
-  "zoneId": 11897090
-};
-self.lary = "";
-importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw');
 
 /* ── Install ── */
 self.addEventListener("install", event => {
