@@ -1,46 +1,46 @@
 /* QuickSave app.js v8.9.4 */
 console.log("QuickSave v8.9.4 loaded");
 
-const AD_SECONDS  = 5;
+const AD_SECONDS   = 5;
 const ICON_VERSION = "2";
 const $ = id => document.getElementById(id);
 
 /* ── Elements ── */
-const url           = $("url"),
-      paste         = $("paste"),
-      go            = $("go"),
-      drop          = $("drop"),
-      status        = $("status"),
-      result        = $("result"),
-      mediaName     = $("name"),
-      meta          = $("meta"),
-      downloadBtn   = $("download"),
-      thumb         = $("thumb"),
-      progress      = $("progress"),
-      bar           = $("bar"),
-      progressText  = $("progressText"),
-      progressPct   = $("progressPct"),
-      install       = $("install"),
-      iosInstall    = $("iosInstall"),
-      iosDismiss    = $("iosDismiss"),
-      autoToggle    = $("autoToggle"),
-      autoLabel     = $("autoLabel"),
-      retryBtn      = $("retryBtn"),
-      queueStatus   = $("queueStatus"),
-      queueText     = $("queueText"),
-      updateBanner  = $("updateBanner"),
-      bgStatus      = $("bgStatus"),
-      bgStatusText  = $("bgStatusText"),
-      bgStatusIcon  = $("bgStatusIcon"),
-      adOverlay     = $("adOverlay"),
-      countdownNum  = $("countdownNum"),
-      skipCountdown = $("skipCountdown"),
-      adSkipBtn     = $("adSkipBtn"),
-      ringProgress  = $("ringProgress"),
+const url            = $("url"),
+      paste          = $("paste"),
+      go             = $("go"),
+      drop           = $("drop"),
+      status         = $("status"),
+      result         = $("result"),
+      mediaName      = $("name"),
+      meta           = $("meta"),
+      downloadBtn    = $("download"),
+      thumb          = $("thumb"),
+      progress       = $("progress"),
+      bar            = $("bar"),
+      progressText   = $("progressText"),
+      progressPct    = $("progressPct"),
+      install        = $("install"),
+      iosInstall     = $("iosInstall"),
+      iosDismiss     = $("iosDismiss"),
+      autoToggle     = $("autoToggle"),
+      autoLabel      = $("autoLabel"),
+      retryBtn       = $("retryBtn"),
+      queueStatus    = $("queueStatus"),
+      queueText      = $("queueText"),
+      updateBanner   = $("updateBanner"),
+      bgStatus       = $("bgStatus"),
+      bgStatusText   = $("bgStatusText"),
+      bgStatusIcon   = $("bgStatusIcon"),
+      adOverlay      = $("adOverlay"),
+      countdownNum   = $("countdownNum"),
+      skipCountdown  = $("skipCountdown"),
+      adSkipBtn      = $("adSkipBtn"),
+      ringProgress   = $("ringProgress"),
       resultBannerAd = $("resultBannerAd"),
-      donateUpiBtn  = $("donateUpiBtn"),
-      upiModal      = $("upiModal"),
-      upiModalClose = $("upiModalClose");
+      donateUpiBtn   = $("donateUpiBtn"),
+      upiModal       = $("upiModal"),
+      upiModalClose  = $("upiModalClose");
 
 let current        = null;
 let installPrompt  = null;
@@ -172,7 +172,7 @@ function showResultAds() {
   if (!adsInjected) {
     adsInjected = true;
     try {
-      const s = document.createElement("script");
+      const s        = document.createElement("script");
       s.dataset.zone = "11897091";
       s.src          = "https://nap5k.com/tag.min.js";
       s.async        = true;
@@ -825,8 +825,14 @@ if ("serviceWorker" in navigator) {
 
 /* ════════════════════════════════════════
    STARTUP
+   ✅ Purana ad-disable flag yahan clear hota hai
+   Jis bhi user ne 666666 code lagaya tha
+   unka localStorage reset ho jayega
 ════════════════════════════════════════ */
 async function onStartup() {
+  /* Purana ad-disable bypass clear karo - sabke liye */
+  localStorage.removeItem("qs_ads_disabled");
+
   setAuto(isAutoOn());
   checkVersion();
   checkIconUpdate();
