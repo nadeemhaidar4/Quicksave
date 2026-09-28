@@ -163,54 +163,45 @@ function showIconUpdatePrompt() {
 }
 
 /* ════════════════════════════════════════
+   AD INJECT HELPER
+   Zone 287137 = Banner Ad (quge5.com)
+════════════════════════════════════════ */
+function injectBannerScript() {
+  const s = document.createElement("script");
+  s.src   = "https://quge5.com/88/tag.min.js";
+  s.setAttribute("data-zone", "287137");
+  s.setAttribute("data-cfasync", "false");
+  s.async = true;
+  document.body.appendChild(s);
+  console.log("[ad] Banner script injected - zone 287137");
+}
+
+/* ════════════════════════════════════════
    RESULT CARD ADS
-   - Sirf tab dikhao jab result ready ho
-   - Download shuru hone se pehle hide karo
+   - Link paste hone ke baad dikhao
+   - Download se pehle hide karo
 ════════════════════════════════════════ */
 function showResultAds() {
   if (!resultBannerAd) return;
 
-  /* Pehli baar In-Page Push inject karo */
-  if (!adsInjected) {
-    adsInjected = true;
-    try {
-      const s        = document.createElement("script");
-      s.dataset.zone = "11897091";
-      s.src          = "https://nap5k.com/tag.min.js";
-      s.async        = true;
-      s.setAttribute("data-cfasync", "false");
-      document.body.appendChild(s);
-      console.log("[ad] In-Page Push injected");
-    } catch(e) {
-      console.log("[ad] In-Page Push error:", e.message);
-    }
-  }
-
-  /* Result banner ad */
   if (!resultAdsShown) {
     resultAdsShown = true;
     resultBannerAd.classList.remove("hide");
+
     try {
+      /* Banner ad inject karo result card mein */
       const ins = document.createElement("ins");
       ins.className = "monetag-ad";
       ins.setAttribute("data-zone", "287137");
       resultBannerAd.innerHTML = "";
       resultBannerAd.appendChild(ins);
 
-      const s = document.createElement("script");
-      s.src   = "https://quge5.com/88/tag.min.js";
-      s.setAttribute("data-zone", "287137");
-      s.setAttribute("data-cfasync", "false");
-      s.async   = true;
-      s.onerror = () => showResultFallbackAd();
-      document.body.appendChild(s);
-      console.log("[ad] Result banner injected");
+      injectBannerScript();
     } catch(e) {
-      console.log("[ad] Result banner error:", e.message);
-      showResultFallbackAd();
+      console.log("[ad] Result ad error:", e.message);
+      showFallbackAd(resultBannerAd);
     }
   } else {
-    /* Already inject ho chuka - sirf visible karo */
     resultBannerAd.classList.remove("hide");
   }
 }
@@ -221,9 +212,9 @@ function hideResultAds() {
   }
 }
 
-function showResultFallbackAd() {
-  if (!resultBannerAd) return;
-  resultBannerAd.innerHTML = `
+function showFallbackAd(container) {
+  if (!container) return;
+  container.innerHTML = `
     <div class="fallback-ad">
       <span>❤️</span>
       <div>
@@ -240,12 +231,9 @@ function showResultFallbackAd() {
 /* ════════════════════════════════════════
    OVERLAY AD INJECT
    - Download click ke baad overlay mein
-     banner ad inject karo
 ════════════════════════════════════════ */
 function injectOverlayAd() {
   if (!bannerAdSlot) return;
-
-  /* Sirf ek baar inject karo */
   if (overlayAdInjected) return;
   overlayAdInjected = true;
 
@@ -256,34 +244,12 @@ function injectOverlayAd() {
     bannerAdSlot.innerHTML = "";
     bannerAdSlot.appendChild(ins);
 
-    const s = document.createElement("script");
-    s.src   = "https://quge5.com/88/tag.min.js";
-    s.setAttribute("data-zone", "287137");
-    s.setAttribute("data-cfasync", "false");
-    s.async   = true;
-    s.onerror = () => showOverlayFallbackAd();
-    document.body.appendChild(s);
-    console.log("[ad] Overlay banner injected");
+    injectBannerScript();
+    console.log("[ad] Overlay ad injected - zone 287137");
   } catch(e) {
-    console.log("[ad] Overlay banner error:", e.message);
-    showOverlayFallbackAd();
+    console.log("[ad] Overlay ad error:", e.message);
+    showFallbackAd(bannerAdSlot);
   }
-}
-
-function showOverlayFallbackAd() {
-  if (!bannerAdSlot) return;
-  bannerAdSlot.innerHTML = `
-    <div class="fallback-ad">
-      <span>❤️</span>
-      <div>
-        <strong>Enjoying QuickSave?</strong>
-        <small>Support us with a donation</small>
-      </div>
-      <a href="https://www.paypal.me/nadeemhaidar"
-         target="_blank" rel="noopener"
-         class="fallback-ad-btn">Donate 💙</a>
-    </div>
-  `;
 }
 
 /* ════════════════════════════════════════
@@ -292,7 +258,7 @@ function showOverlayFallbackAd() {
 function showAdOverlay(onComplete) {
   adCallback = onComplete || null;
 
-  /* ✅ Overlay mein ad inject karo */
+  /* Overlay mein ad inject karo */
   injectOverlayAd();
 
   adOverlay.classList.remove("hide");
@@ -667,7 +633,7 @@ async function processUrl(value, autoDownload = false) {
     result.classList.remove("hide");
     msg("Ready! Tap the button below to download.", "ok");
 
-    /* ✅ Result ready - result card ads dikhao */
+    /* ✅ Result ready - ads dikhao */
     showResultAds();
 
     if (autoDownload && isAutoOn()) {
@@ -689,7 +655,7 @@ async function processUrl(value, autoDownload = false) {
    ACTUAL DOWNLOAD
 ════════════════════════════════════════ */
 async function doActualDownload(d) {
-  /* ✅ Download shuru - result ads hide karo */
+  /* Download shuru - result ads hide karo */
   hideResultAds();
 
   progress.classList.remove("hide");
@@ -882,7 +848,7 @@ if ("serviceWorker" in navigator) {
    STARTUP
 ════════════════════════════════════════ */
 async function onStartup() {
-  /* ✅ Purana ad-disable bypass clear karo - sabke liye */
+  /* Purana ad-disable bypass clear karo */
   localStorage.removeItem("qs_ads_disabled");
 
   setAuto(isAutoOn());
