@@ -1,5 +1,5 @@
-/* QuickSave app.js v8.9.2 */
-console.log("QuickSave v8.9.2 loaded");
+/* QuickSave app.js v8.9.3 */
+console.log("QuickSave v8.9.3 loaded");
 
 const AD_DISABLE_CODE = "666666";
 const AD_SECONDS      = 5;
@@ -41,8 +41,7 @@ const url           = $("url"),
       skipCountdown = $("skipCountdown"),
       adSkipBtn     = $("adSkipBtn"),
       ringProgress  = $("ringProgress"),
-      bannerAdSlot  = $("bannerAdSlot"),
-      inpageAdSlot  = $("inpageAdSlot"),
+      resultBannerAd = $("resultBannerAd"),
       donateUpiBtn  = $("donateUpiBtn"),
       upiModal      = $("upiModal"),
       upiModalClose = $("upiModalClose");
@@ -56,6 +55,7 @@ let newSW         = null;
 let adTimer       = null;
 let adCallback    = null;
 let adsInjected   = false;
+let resultAdsShown = false; /* Result card ads track karo */
 
 const RING_CIRC = 94.25;
 
@@ -109,48 +109,29 @@ function msg(t, c = "") {
 ════════════════════════════════════════ */
 function checkIconUpdate() {
   const stored = localStorage.getItem("qs_icon_v");
-
-  /* Pehli baar - sirf save karo, prompt mat dikhao */
   if (!stored) {
     localStorage.setItem("qs_icon_v", ICON_VERSION);
     return;
   }
-
-  /* Already latest version */
   if (stored === ICON_VERSION) return;
-
-  /* Purana version - update karo aur prompt dikhao */
   localStorage.setItem("qs_icon_v", ICON_VERSION);
-
-  /* Sirf installed PWA users ko dikhao */
   if (!isStandalone()) return;
-
   setTimeout(() => showIconUpdatePrompt(), 2000);
 }
 
 function showIconUpdatePrompt() {
   if (document.getElementById("iconUpdatePrompt")) return;
-
   const isIOSDevice = isIOS();
-
   const prompt = document.createElement("div");
   prompt.id    = "iconUpdatePrompt";
   prompt.style.cssText = `
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 99999;
-    background: #1c2033;
-    border: 1px solid rgba(124,108,252,0.4);
-    border-radius: 16px;
-    padding: 16px 20px;
-    width: min(90vw, 360px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-    font-family: system-ui, sans-serif;
-    animation: iconPromptUp 0.3s ease;
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%); z-index: 99999;
+    background: #1c2033; border: 1px solid rgba(124,108,252,0.4);
+    border-radius: 16px; padding: 16px 20px;
+    width: min(90vw, 360px); box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    font-family: system-ui, sans-serif; animation: iconPromptUp 0.3s ease;
   `;
-
   prompt.innerHTML = `
     <style>
       @keyframes iconPromptUp {
@@ -158,64 +139,23 @@ function showIconUpdatePrompt() {
         to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
       }
     </style>
-
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-      <div style="
-        width:44px;height:44px;flex-shrink:0;
-        background:linear-gradient(135deg,#7c6cfc,#e83e8c);
-        border-radius:12px;
-        display:flex;align-items:center;justify-content:center;
-        font-size:22px;color:#fff;font-weight:900;
-      ">QS</div>
+      <div style="width:44px;height:44px;flex-shrink:0;background:linear-gradient(135deg,#7c6cfc,#e83e8c);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:900;">QS</div>
       <div style="flex:1;">
-        <div style="font-size:14px;font-weight:700;color:#eee;">
-          🎨 New Icon Available!
-        </div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">
-          Reinstall to update home screen icon
-        </div>
+        <div style="font-size:14px;font-weight:700;color:#eee;">🎨 New Icon Available!</div>
+        <div style="font-size:12px;color:#888;margin-top:2px;">Reinstall to update home screen icon</div>
       </div>
-      <button
-        onclick="document.getElementById('iconUpdatePrompt').remove()"
-        style="
-          background:rgba(255,255,255,0.08);border:none;color:#666;
-          width:28px;height:28px;border-radius:50%;cursor:pointer;
-          font-size:13px;flex-shrink:0;
-        ">✕</button>
+      <button onclick="document.getElementById('iconUpdatePrompt').remove()" style="background:rgba(255,255,255,0.08);border:none;color:#666;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;flex-shrink:0;">✕</button>
     </div>
-
-    <div style="
-      background:rgba(124,108,252,0.08);
-      border:1px solid rgba(124,108,252,0.2);
-      border-radius:10px;padding:12px;
-      font-size:12px;color:#aaa;line-height:1.9;
-      margin-bottom:14px;
-    ">
+    <div style="background:rgba(124,108,252,0.08);border:1px solid rgba(124,108,252,0.2);border-radius:10px;padding:12px;font-size:12px;color:#aaa;line-height:1.9;margin-bottom:14px;">
       ${isIOSDevice
-        ? `1. Open in <b style="color:#ddd">Safari</b><br>
-           2. Tap <b style="color:#ddd">Share ⎋</b> button<br>
-           3. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>
-           4. Delete old icon from home screen`
-        : `1. Tap Chrome menu <b style="color:#ddd">⋮</b><br>
-           2. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>
-           3. Delete old icon from home screen`
+        ? `1. Open in <b style="color:#ddd">Safari</b><br>2. Tap <b style="color:#ddd">Share ⎋</b> button<br>3. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>4. Delete old icon from home screen`
+        : `1. Tap Chrome menu <b style="color:#ddd">⋮</b><br>2. Tap <b style="color:#ddd">"Add to Home Screen"</b><br>3. Delete old icon from home screen`
       }
     </div>
-
-    <button
-      onclick="document.getElementById('iconUpdatePrompt').remove()"
-      style="
-        width:100%;
-        background:linear-gradient(135deg,#7c6cfc,#9b6bfc);
-        color:#fff;border:none;padding:11px;border-radius:10px;
-        cursor:pointer;font-size:14px;font-weight:700;
-        font-family:system-ui,sans-serif;
-      ">Got it! 👍</button>
+    <button onclick="document.getElementById('iconUpdatePrompt').remove()" style="width:100%;background:linear-gradient(135deg,#7c6cfc,#9b6bfc);color:#fff;border:none;padding:11px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;font-family:system-ui,sans-serif;">Got it! 👍</button>
   `;
-
   document.body.appendChild(prompt);
-
-  /* 15 sec baad auto remove */
   setTimeout(() => {
     try {
       const el = document.getElementById("iconUpdatePrompt");
@@ -244,7 +184,8 @@ adCodeBtn?.addEventListener("click", () => {
     }
   } else if (c === "000000") {
     setAdsOff(false);
-    adsInjected = false;
+    adsInjected    = false;
+    resultAdsShown = false;
     if (adCodeMsg) {
       adCodeMsg.textContent = "Ads enabled.";
       adCodeMsg.className   = "code-msg";
@@ -263,52 +204,73 @@ adCodeInput?.addEventListener("keydown", e => {
 });
 
 /* ════════════════════════════════════════
-   AD INJECT - Sirf download ke waqt pehli baar
+   RESULT CARD ADS
+   - Sirf tab inject karo jab result ready ho
+   - Download shuru hone se pehle hide karo
 ════════════════════════════════════════ */
-function injectAds() {
-  if (adsInjected || isAdsOff()) return;
-  adsInjected = true;
+function showResultAds() {
+  /* Agar ads off hain ya already shown hain toh skip */
+  if (isAdsOff() || !resultBannerAd) return;
 
-  /* In-Page Push */
-  try {
-    (function(s) {
+  /* Pehli baar inject karo */
+  if (!adsInjected) {
+    adsInjected = true;
+
+    /* In-Page Push ad - sirf ek baar */
+    try {
+      const s = document.createElement("script");
       s.dataset.zone = "11897091";
       s.src          = "https://nap5k.com/tag.min.js";
       s.async        = true;
       s.setAttribute("data-cfasync", "false");
-    })(document.body.appendChild(document.createElement("script")));
-    console.log("[ad] In-Page Push injected");
-  } catch(e) {
-    console.log("[ad] In-Page Push error:", e.message);
+      document.body.appendChild(s);
+      console.log("[ad] In-Page Push injected");
+    } catch(e) {
+      console.log("[ad] In-Page Push error:", e.message);
+    }
   }
 
-  /* Banner Ad */
-  try {
-    if (bannerAdSlot) {
+  /* Result banner ad - sirf result card mein show karo */
+  if (!resultAdsShown) {
+    resultAdsShown = true;
+    resultBannerAd.classList.remove("hide");
+
+    try {
+      /* Banner ad inject karo */
       const ins = document.createElement("ins");
       ins.className = "monetag-ad";
       ins.setAttribute("data-zone", "287137");
-      bannerAdSlot.innerHTML = "";
-      bannerAdSlot.appendChild(ins);
+      resultBannerAd.innerHTML = "";
+      resultBannerAd.appendChild(ins);
 
-      const s     = document.createElement("script");
-      s.src       = "https://quge5.com/88/tag.min.js";
+      const s = document.createElement("script");
+      s.src   = "https://quge5.com/88/tag.min.js";
       s.setAttribute("data-zone", "287137");
       s.setAttribute("data-cfasync", "false");
-      s.async     = true;
-      s.onerror   = () => showFallbackAd();
+      s.async   = true;
+      s.onerror = () => showResultFallbackAd();
       document.body.appendChild(s);
-      console.log("[ad] Banner injected");
+      console.log("[ad] Result banner injected");
+    } catch(e) {
+      console.log("[ad] Result banner error:", e.message);
+      showResultFallbackAd();
     }
-  } catch(e) {
-    console.log("[ad] Banner error:", e.message);
-    showFallbackAd();
+  } else {
+    /* Already injected - sirf visible karo */
+    resultBannerAd.classList.remove("hide");
   }
 }
 
-function showFallbackAd() {
-  if (!bannerAdSlot) return;
-  bannerAdSlot.innerHTML = `
+function hideResultAds() {
+  /* Download hone wali hai - ads hide karo */
+  if (resultBannerAd) {
+    resultBannerAd.classList.add("hide");
+  }
+}
+
+function showResultFallbackAd() {
+  if (!resultBannerAd) return;
+  resultBannerAd.innerHTML = `
     <div class="fallback-ad">
       <span>❤️</span>
       <div>
@@ -323,16 +285,16 @@ function showFallbackAd() {
 }
 
 /* ════════════════════════════════════════
-   AD OVERLAY
+   AD OVERLAY - Download click ke baad
 ════════════════════════════════════════ */
 function showAdOverlay(onComplete) {
   if (isAdsOff()) {
+    /* Ads off hain - seedha download */
     if (onComplete) onComplete();
     return;
   }
 
   adCallback = onComplete || null;
-  injectAds();
 
   adOverlay.classList.remove("hide");
   document.body.style.overflow = "hidden";
@@ -428,10 +390,10 @@ function getSmartFilename(filename) {
     if (now - usedNames[k] > 24 * 60 * 60 * 1000) delete usedNames[k];
   });
 
-  const ext      = filename.match(/\.[a-z0-9]+$/i)?.[0] || ".mp4";
-  const base     = filename.replace(/\.[a-z0-9]+$/i, "");
-  let finalName  = filename;
-  let counter    = 0;
+  const ext     = filename.match(/\.[a-z0-9]+$/i)?.[0] || ".mp4";
+  const base    = filename.replace(/\.[a-z0-9]+$/i, "");
+  let finalName = filename;
+  let counter   = 0;
 
   while (usedNames[finalName]) {
     counter++;
@@ -526,7 +488,6 @@ function setupSWMessages() {
   navigator.serviceWorker.addEventListener("message", async event => {
     const d = event.data || {};
 
-    /* SW updated - icon check karo */
     if (d.type === "SW_UPDATED") {
       console.log("[App] SW updated");
       checkIconUpdate();
@@ -656,6 +617,10 @@ async function processUrl(value, autoDownload = false) {
   lastUrl     = value;
   url.value   = value;
   go.disabled = true;
+
+  /* Naya URL process ho raha hai - ads reset karo */
+  resultAdsShown = false;
+  hideResultAds();
   result.classList.add("hide");
   progress.classList.add("hide");
 
@@ -703,6 +668,9 @@ async function processUrl(value, autoDownload = false) {
     result.classList.remove("hide");
     msg("Ready! Tap the button below to download.", "ok");
 
+    /* ✅ Result ready - ab ads dikhao (sirf yahan) */
+    showResultAds();
+
     if (autoDownload && isAutoOn()) {
       setTimeout(() => triggerDownload(d), 600);
     }
@@ -720,8 +688,12 @@ async function processUrl(value, autoDownload = false) {
 
 /* ════════════════════════════════════════
    ACTUAL DOWNLOAD
+   - Shuru hone se pehle ads hide karo
 ════════════════════════════════════════ */
 async function doActualDownload(d) {
+  /* ✅ Download shuru - result ads band karo */
+  hideResultAds();
+
   progress.classList.remove("hide");
   progressText.textContent = "Downloading...";
   bar.style.width          = "15%";
@@ -772,6 +744,7 @@ async function doActualDownload(d) {
 ════════════════════════════════════════ */
 function triggerDownload(d) {
   if (!d?.id) return;
+  /* Ad overlay dikhao - iske andar download start hoga */
   showAdOverlay(() => doActualDownload(d));
 }
 
