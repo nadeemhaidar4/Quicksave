@@ -1,7 +1,11 @@
-/* QuickSave app.js v9.1.1 */
-console.log("QuickSave v9.1.1 loaded");
+/* QuickSave app.js v9.1.2 */
+console.log("QuickSave v9.1.2 loaded");
 
 const AD_SECONDS   = 5;
+/* Frequency cap — user lagatar download kare to har baar
+   interstitial na dikhe. Banner har baar dikhega. */
+const AD_OVERLAY_COOLDOWN_MS = 3 * 60 * 1000;
+let lastOverlayShownAt = 0;
 const ICON_VERSION = "2";
 const $ = id => document.getElementById(id);
 
@@ -765,6 +769,13 @@ async function doActualDownload(d) {
 ════════════════════════════════════════ */
 function triggerDownload(d) {
   if (!d?.id) return;
+  const now = Date.now();
+  if (now - lastOverlayShownAt < AD_OVERLAY_COOLDOWN_MS) {
+    /* Cooldown me seedha download — user pareshan nahi hoga */
+    doActualDownload(d);
+    return;
+  }
+  lastOverlayShownAt = now;
   showAdOverlay(() => doActualDownload(d));
 }
 
