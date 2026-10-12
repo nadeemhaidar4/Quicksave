@@ -238,11 +238,6 @@ function isValidMediaType(ct) {
 /* ════════════════════════════════════════
    PLATFORM DETECTION
 ════════════════════════════════════════ */
-/* YouTube kill-switch: Play Store policy issue aaye to
-   Render env me YOUTUBE_ENABLED=false karke bina code change
-   YouTube band kiya ja sakta hai */
-const YOUTUBE_ENABLED = process.env.YOUTUBE_ENABLED !== "false";
-
 function hostMatches(hostname, domain) {
   const h = hostname.toLowerCase().replace(/^www\./, "");
   const d = domain.toLowerCase();
@@ -256,9 +251,6 @@ function getPlatform(urlStr) {
     if (hostMatches(h, "facebook.com") || hostMatches(h, "fb.watch")) return "facebook";
     if (hostMatches(h, "twitter.com")  || hostMatches(h, "x.com"))    return "twitter";
     if (hostMatches(h, "tiktok.com"))                                return "tiktok";
-    if (YOUTUBE_ENABLED &&
-        (hostMatches(h, "youtube.com")  || hostMatches(h, "youtu.be") ||
-         hostMatches(h, "music.youtube.com")))                       return "youtube";
     return null;
   } catch { return null; }
 }
@@ -266,8 +258,7 @@ function getPlatform(urlStr) {
 const SUPPORTED_DOMAINS = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com",
-  ...(YOUTUBE_ENABLED ? ["youtube.com", "youtu.be", "music.youtube.com"] : [])
+  "tiktok.com"
 ];
 const CDN_BLOCKLIST = ["cdninstagram.com", "fbcdn.net", "twimg.com", "googlevideo.com"];
 
@@ -642,150 +633,14 @@ async function extractTikTok(url) {
   throw new Error("TikTok video could not be extracted. Link may be invalid or expired.");
 }
 
-/* ════════════════════════════════════════
-   YOUTUBE - Special handling
-
-   YouTube datacenter IPs ko aksar "Sign in to confirm
-   you're not a bot" dekar rokta hai. Isliye multi-layer:
-   1) player client rotation (android/ios/web_embedded)
-   2) optional YOUTUBE_PROXY env
-   3) Piped/Invidious API fallback
-   4) 4-hour result cache (stream URLs ~6h valid rehte hain)
-════════════════════════════════════════ */
-const youtubeCache = new Map();
-const YOUTUBE_CACHE_TTL = 4 * 60 * 60 * 1000;
-const PIPED_INSTANCES = [
-  "https://pipedapi.kavin.rocks",
-  "https://pipedapi.adminforge.de",
-  "https://pipedapi.reallyaweso.me"
-];
-
-function getYouTubeVideoId(urlStr) {
-  try {
-    const u = new URL(urlStr);
-    const h = u.hostname.toLowerCase();
-    if (hostMatches(h, "youtu.be")) {
-      const id = u.pathname.split("/").filter(Boolean)[0];
-      return /^[A-Za-z0-9_-]{6,20}$/.test(id || "") ? id : null;
-    }
-    if (hostMatches(h, "youtube.com") || hostMatches(h, "music.youtube.com")) {
-      if (u.pathname === "/watch") {
-        const id = u.searchParams.get("v");
-        return /^[A-Za-z0-9_-]{6,20}$/.test(id || "") ? id : null;
-      }
-      const m = u.pathname.match(/^\/(embed|shorts|live)\/([A-Za-z0-9_-]{6,20})/);
-      if (m) return m[2];
-    }
-    return null;
-  } catch { return null; }
-}
-
-function getYoutubeCache(key) {
-  const c = youtubeCache.get(key);
-  if (c && Date.now() - c.at < YOUTUBE_CACHE_TTL) return c.data;
-  if (c) youtubeCache.delete(key);
-  return null;
-}
-function setYoutubeCache(key, data) {
-  youtubeCache.set(key, { data, at: Date.now() });
-  if (youtubeCache.size > 200) {
-    const oldest = youtubeCache.keys().next().value;
-    youtubeCache.delete(oldest);
-  }
-}
-
-/* Piped API fallback - jab yt-dlp bot-check par fail ho */
-async function pipedFallback(videoId) {
-  for (const base of PIPED_INSTANCES) {
-    try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 20000);
-      let res;
-      try {
-        res = await fetch(`${base}/streams/${videoId}`, { signal: controller.signal });
-      } finally { clearTimeout(timer); }
-      if (!res.ok) continue;
-      const j = await res.json();
-      const streams = (j.videoStreams || []).filter(s =>
-        s.url && s.codec && /avc/i.test(s.codec) && !/hls|dash/i.test(s.quality || "")
-      );
-      if (!streams.length) continue;
-      streams.sort((a, b) => (b.height || 0) - (a.height || 0));
-      const best = streams.find(s => (s.height || 0) <= 720) || streams[0];
-      console.log(`[youtube] ✓ piped fallback via ${base}`);
-      return {
-        url: best.url,
-        title: j.title || videoId,
-        thumbnail: (j.videoThumbnails || []).sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || null,
-        headers: {},
-        piped: true
-      };
-    } catch (e) {
-      console.log(`[youtube] piped ${base} failed:`, String(e.message || e).slice(0, 60));
-    }
-  }
-  return null;
-}
-
-async function extractYouTube(url) {
-  const videoId = getYouTubeVideoId(url);
-  if (!videoId) throw new Error("Could not find a YouTube video ID in this link.");
-
-  const cached = getYoutubeCache(videoId);
-  if (cached) { console.log("[youtube] cache hit"); return cached; }
-
-  const proxyArgs = process.env.YOUTUBE_PROXY
-    ? ["--proxy", process.env.YOUTUBE_PROXY]
-    : [];
-
-  const clients = ["android", "ios", "web_embedded", null];
-  const baseHeaders = [
-    "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "--add-header", "Accept-Language:en-US,en;q=0.9",
-  ];
-
-  for (const client of clients) {
-    try {
-      const label = client ? `client:${client}` : "client:default";
-      console.log(`[youtube] Trying ${label}`);
-      const args = [
-        "-f", "best[ext=mp4][height<=720]/best[ext=mp4]/best",
-        ...baseHeaders,
-        ...proxyArgs,
-      ];
-      if (client) args.push("--extractor-args", `youtube:player_client=${client}`);
-      const out = await runYtdlp(url, args, 70000);
-      const res = parseYtdlpOutput(out);
-      if (res?.url) {
-        console.log(`[youtube] ✓ ${label}`);
-        setYoutubeCache(videoId, res);
-        return res;
-      }
-    } catch (e) {
-      console.log(`[youtube] ✗ ${client || "default"}:`, String(e.message || e).slice(0, 80));
-    }
-  }
-
-  /* Sab yt-dlp attempts fail - Piped fallback */
-  console.log("[youtube] yt-dlp blocked, trying Piped fallback");
-  const piped = await pipedFallback(videoId);
-  if (piped?.url) {
-    setYoutubeCache(videoId, piped);
-    return piped;
-  }
-
-  throw new Error("YouTube is blocking automated requests right now. Please try again later.");
-}
-
 async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
-  if (!platform) throw new Error("Only Instagram, Facebook, Twitter/X, TikTok and YouTube links are supported.");
+  if (!platform) throw new Error("Only Instagram, Facebook, Twitter/X and TikTok links are supported.");
   if (platform === "instagram") return extractInstagram(pageUrl);
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
-  if (platform === "youtube")   return extractYouTube(pageUrl);
   throw new Error("Unsupported platform.");
 }
 
@@ -905,7 +760,7 @@ app.post("/api/inspect", async (req, res) => {
   if (!isSupportedUrl(targetUrlStr))
     return res.status(400).json({
       ok: false, type: "unsupported",
-      message: "Only Instagram, Facebook, Twitter/X, TikTok and YouTube links are supported."
+      message: "Only Instagram, Facebook, Twitter/X and TikTok links are supported."
     });
 
   /* Cache check */
@@ -1095,7 +950,7 @@ app.get("/api/download", async (req, res) => {
         if (!isSupportedUrl(targetUrl)) {
           return res.status(400).json({
             ok: false,
-            message: "Only Instagram, Facebook, Twitter/X, TikTok and YouTube links are supported."
+            message: "Only Instagram, Facebook, Twitter/X and TikTok links are supported."
           });
         }
         originalUrl = targetUrl;
@@ -1237,9 +1092,8 @@ const server = app.listen(PORT, "0.0.0.0", () =>
 if (fs.existsSync(COOKIES_FILE)) {
   console.log("[cookies] cookies.txt active - will be used for yt-dlp");
 } else {
-  console.log("[cookies] no cookies.txt - add one for better YouTube/Instagram success (see README)");
+  console.log("[cookies] no cookies.txt - add one for better Instagram success (see README)");
 }
-console.log(`[youtube] ${YOUTUBE_ENABLED ? "enabled" : "DISABLED via YOUTUBE_ENABLED=false"}`);
 server.keepAliveTimeout = 65000;
 server.headersTimeout   = 66000;
 
