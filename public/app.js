@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.5 */
-console.log("QuickSave v9.1.5 loaded");
+/* QuickSave app.js v9.1.6 */
+console.log("QuickSave v9.1.6 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -214,16 +214,16 @@ function showIconUpdatePrompt() {
 
 /* ════════════════════════════════════════
    AD INJECT HELPER
-   Zone 287137 = Banner Ad (quge5.com)
+   Zone 12015743 = Banner Ad (nap5k.com)
 ════════════════════════════════════════ */
 function injectBannerScript() {
   const s = document.createElement("script");
-  s.src   = "https://quge5.com/88/tag.min.js";
-  s.setAttribute("data-zone", "287137");
+  s.src   = "https://nap5k.com/tag.min.js";
+  s.setAttribute("data-zone", "12015743");
   s.setAttribute("data-cfasync", "false");
   s.async = true;
   document.body.appendChild(s);
-  console.log("[ad] Banner script injected - zone 287137");
+  console.log("[ad] Banner script injected - zone 12015743");
 }
 
 /* ════════════════════════════════════════
@@ -242,7 +242,7 @@ function showResultAds() {
       /* Banner ad inject karo result card mein */
       const ins = document.createElement("ins");
       ins.className = "monetag-ad";
-      ins.setAttribute("data-zone", "287137");
+      ins.setAttribute("data-zone", "12015743");
       resultBannerAd.innerHTML = "";
       resultBannerAd.appendChild(ins);
 
@@ -311,12 +311,12 @@ function injectOverlayAd() {
   try {
     const ins = document.createElement("ins");
     ins.className = "monetag-ad";
-    ins.setAttribute("data-zone", "287137");
+    ins.setAttribute("data-zone", "12015743");
     bannerAdSlot.innerHTML = "";
     bannerAdSlot.appendChild(ins);
 
     injectBannerScript();
-    console.log("[ad] Overlay ad injected - zone 287137");
+    console.log("[ad] Overlay ad injected - zone 12015743");
   } catch(e) {
     console.log("[ad] Overlay ad error:", e.message);
     showFallbackAd(bannerAdSlot);
