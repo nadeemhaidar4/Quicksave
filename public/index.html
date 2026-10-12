@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080b16">
+  <meta name="theme-color" content="#05070f">
   <meta name="description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips free. Fast, easy, no signup required.">
   <meta name="keywords" content="instagram video downloader, tiktok downloader, facebook video download, twitter video save, reels downloader free">
   <meta name="robots" content="index, follow">
@@ -92,9 +92,14 @@
   </nav>
 
   <section class="hero">
-    <div class="tag">● INSTAGRAM &nbsp;•&nbsp; TIKTOK &nbsp;•&nbsp; FACEBOOK &nbsp;•&nbsp; TWITTER/X </div>
+    <div class="platforms">
+      <span>📸 Instagram</span>
+      <span>🎵 TikTok</span>
+      <span>👥 Facebook</span>
+      <span>🐦 X</span>
+    </div>
     <h1>Save any video.<br><i>In seconds.</i></h1>
-    <p>Download Instagram Reels, TikTok videos, Facebook videos, Twitter clips for free. No signup. No watermark.</p>
+    <p>Paste a link, tap Get media, download. Free forever, no signup.</p>
 
     <div id="queueStatus" class="queue-status hide">
       <div class="queue-dot"></div>
@@ -156,6 +161,8 @@
       </p>
     </section>
 
+    <button id="moreToggle" class="more-toggle" type="button">✨ Features &amp; FAQ</button>
+    <div id="moreWrap">
     <section class="howto">
       <h2>How to Download Videos</h2>
       <div class="steps">
@@ -233,12 +240,13 @@
         <p>Yes. We do not store any URLs or videos. Everything is deleted immediately.</p>
       </details>
     </section>
+    </div>
 
     <section class="donation-section">
       <div class="donation-header">
         <span class="donation-emoji">❤️</span>
         <h3>Support QuickSave</h3>
-        <p>Agar yeh app aapke kaam aaya toh please support karein. Aapka ek chhota sa donation server costs cover karne mein help karta hai!</p>
+        <p>Your small donation keeps our servers running. Thank you! 🙏</p>
       </div>
       <div class="donation-buttons">
         <button class="donate-btn upi-btn" id="donateUpiBtn" type="button">

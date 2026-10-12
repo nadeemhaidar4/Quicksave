@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.0.0 */
-console.log("QuickSave v9.0.0 loaded");
+/* QuickSave app.js v9.1.0 */
+console.log("QuickSave v9.1.0 loaded");
 
 const AD_SECONDS   = 5;
 const ICON_VERSION = "2";
@@ -106,6 +106,35 @@ function msg(t, c = "") {
   status.className   = "status " + c;
   status.classList.toggle("hide", !t);
 }
+
+/* ════════════════════════════════════════
+   APP MODE — Android WebView wrapper ke andar
+   Site khud detect karke app jaisi compact ho jati hai.
+   WebView UA me "; wv" token hota hai.
+════════════════════════════════════════ */
+function isApp() {
+  return /;\s*wv/.test(navigator.userAgent) || !!window.QuickSaveApp;
+}
+if (isApp()) {
+  document.body.classList.add("app-mode");
+  install?.classList.add("hidden");
+  iosInstall?.classList.add("hidden");
+  console.log("[app] App mode enabled");
+}
+
+/* ════════════════════════════════════════
+   MORE TOGGLE — kam scroll ke liye
+════════════════════════════════════════ */
+(function setupMoreToggle() {
+  const btn = $("moreToggle"), wrap = $("moreWrap");
+  if (!btn || !wrap) return;
+  wrap.classList.add("hide");
+  btn.addEventListener("click", () => {
+    const hidden = wrap.classList.toggle("hide");
+    btn.innerHTML = hidden ? "✨ Features & FAQ" : "▲ Show less";
+    if (!hidden) setTimeout(() => wrap.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  });
+})();
 
 /* ════════════════════════════════════════
    ICON UPDATE PROMPT
