@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.6 */
-console.log("QuickSave v9.1.6 loaded");
+/* QuickSave app.js v9.1.7 */
+console.log("QuickSave v9.1.7 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -446,6 +446,16 @@ function getSmartFilename(filename) {
 /* ════════════════════════════════════════
    SAVE FILE
 ════════════════════════════════════════ */
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 async function saveFileToDevice(buffer, filename, contentType) {
   if (!buffer || buffer.byteLength < 1000)
     throw new Error("Invalid file data received");
@@ -455,6 +465,20 @@ async function saveFileToDevice(buffer, filename, contentType) {
     : contentType?.startsWith("audio/") ? contentType
     : "video/mp4";
 
+  /* APP MODE: native bridge se DIRECT save — blob race khatm.
+     Bridge "OK:actualName" ya "ERROR:reason" return karta hai. */
+  if (isApp() && window.QuickSaveApp && typeof window.QuickSaveApp.saveVideo === "function") {
+    let res = "";
+    try {
+      res = window.QuickSaveApp.saveVideo(arrayBufferToBase64(buffer), smartName, mimeType) || "";
+    } catch (e) {
+      throw new Error("App could not save the video");
+    }
+    if (typeof res === "string" && res.startsWith("OK:")) return res.slice(3);
+    throw new Error(String(res).replace(/^ERROR:/, "") || "App could not save the video");
+  }
+
+  /* Browser flow (pehle jaisa) */
   const blob    = new Blob([buffer], { type: mimeType });
   const blobUrl = URL.createObjectURL(blob);
 
