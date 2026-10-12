@@ -660,6 +660,10 @@ footer {
 body.app-mode nav { padding: 8px 12px; margin-bottom: 12px; top: 8px; }
 body.app-mode #install { display: none !important; }
 body.app-mode #iosInstall { display: none !important; }
+/* Donation app ke andar mat dikhao — Play Store billing policy risk.
+   Website (browser) me visitors ke liye visible rahega. */
+body.app-mode .donation-section { display: none !important; }
+body.app-mode #upiModal { display: none !important; }
 body.app-mode .hero > h1 { font-size: clamp(22px, 5vw, 30px); }
 body.app-mode .hero > p { font-size: 13px; margin-bottom: 14px; }
 body.app-mode .platforms { margin-bottom: 10px; }
