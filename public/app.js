@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.2.1 */
-console.log("QuickSave v9.2.1 loaded");
+/* QuickSave app.js v9.2.2 */
+console.log("QuickSave v9.2.2 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -119,12 +119,17 @@ function msg(t, c = "") {
 function isApp() {
   return /;\s*wv/.test(navigator.userAgent) || !!window.QuickSaveApp;
 }
-if (isApp()) {
+function applyAppMode() {
+  if (!isApp()) return;
   document.body.classList.add("app-mode");
   install?.classList.add("hidden");
   iosInstall?.classList.add("hidden");
   console.log("[app] App mode enabled");
 }
+applyAppMode();
+/* Race-proof: WebView JS interface kabhi late attach hota hai */
+window.addEventListener("load", applyAppMode);
+setTimeout(applyAppMode, 1500);
 
 /* ════════════════════════════════════════
    MORE TOGGLE — kam scroll ke liye
@@ -929,7 +934,8 @@ drop.addEventListener("drop", e => {
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault();
   installPrompt = e;
-  if (!isIOS()) install.classList.remove("hidden");
+  /* App ke andar install button kabhi mat dikhao */
+  if (!isIOS() && !isApp()) install.classList.remove("hidden");
 });
 
 install.onclick = async () => {
