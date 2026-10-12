@@ -63,8 +63,7 @@ const RING_CIRC = 94.25;
 const SUPPORTED = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com", "vm.tiktok.com",
-  "youtube.com", "youtu.be", "music.youtube.com"
+  "tiktok.com", "vm.tiktok.com"
 ];
 function hostMatches(hostname, domain) {
   const h = hostname.toLowerCase();
@@ -525,7 +524,7 @@ async function startBgDownload(pageUrl) {
 ════════════════════════════════════════ */
 async function handleShare(sharedUrl) {
   if (!isSupportedUrl(sharedUrl)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X and YouTube links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
     return;
   }
   url.value = sharedUrl;
@@ -580,7 +579,7 @@ async function tryAutoPaste() {
 async function processUrl(value, autoDownload = false) {
   if (!value || autoProc) return;
   if (!isSupportedUrl(value)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X and YouTube links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
     return;
   }
 
@@ -626,8 +625,7 @@ async function processUrl(value, autoDownload = false) {
       instagram: "📸 Instagram",
       tiktok:    "🎵 TikTok",
       facebook:  "👥 Facebook",
-      twitter:   "🐦 Twitter/X",
-      youtube:   "▶️ YouTube"
+      twitter:   "🐦 Twitter/X"
     };
     meta.textContent =
       (platformEmoji[d.platform] || "📹 Video") + " • " +
