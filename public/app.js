@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.2 */
-console.log("QuickSave v9.1.2 loaded");
+/* QuickSave app.js v9.1.3 */
+console.log("QuickSave v9.1.3 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -623,7 +623,13 @@ async function checkVersion() {
 async function tryAutoPaste() {
   if (!isAutoOn()) return null;
   try {
-    const t = (await navigator.clipboard.readText()).trim();
+    let t = "";
+    /* Android app ka native bridge (naye app version me) */
+    if (window.QuickSaveApp && typeof window.QuickSaveApp.getClipboardText === "function") {
+      t = (window.QuickSaveApp.getClipboardText() || "").trim();
+    } else {
+      t = (await navigator.clipboard.readText()).trim();
+    }
     if (t && isSupportedUrl(t)) return t;
   } catch {}
   return null;
@@ -691,6 +697,10 @@ async function processUrl(value, autoDownload = false) {
     showPreview(d);
     downloadBtn.href = buildDlUrl(d);
     downloadBtn.setAttribute("download", d.filename || "QuickSave_Media.mp4");
+    /* Naya result — button wapas active */
+    downloadBtn.style.opacity       = "";
+    downloadBtn.style.pointerEvents = "";
+    downloadBtn.innerHTML           = "⬇ Download Video Free";
     result.classList.remove("hide");
     msg("Ready! Tap the button below to download.", "ok");
 
@@ -757,10 +767,18 @@ async function doActualDownload(d) {
     progressText.textContent = `✅ "${savedName}" saved to Downloads!`;
     msg("✅ Video saved!", "ok");
 
+    /* Dobara tap par "Could not process" na aaye — button ko saved state me */
+    downloadBtn.style.opacity      = "0.55";
+    downloadBtn.style.pointerEvents = "none";
+    downloadBtn.innerHTML           = "✓ Saved to Downloads";
+
   } catch(e) {
     console.error("[download]", e.message);
+    const friendly = /invalid|expired/i.test(e.message)
+      ? "This link was already used. Tap Get media again for a fresh link."
+      : e.message;
     progressText.textContent = "Download failed. Please try again.";
-    msg("❌ " + e.message, "err");
+    msg("❌ " + friendly, "err");
   }
 }
 
@@ -803,7 +821,13 @@ function showPreview(d) {
 ════════════════════════════════════════ */
 paste.onclick = async () => {
   try {
-    const t = (await navigator.clipboard.readText()).trim();
+    let t = "";
+    /* Android app ka native bridge (naye app version me) */
+    if (window.QuickSaveApp && typeof window.QuickSaveApp.getClipboardText === "function") {
+      t = (window.QuickSaveApp.getClipboardText() || "").trim();
+    } else {
+      t = (await navigator.clipboard.readText()).trim();
+    }
     if (t) {
       url.value = t;
       paste.textContent = "✓ Pasted";
@@ -813,7 +837,7 @@ paste.onclick = async () => {
       msg("Clipboard is empty. Copy a link first.", "err");
     }
   } catch {
-    msg("Clipboard unavailable. Please paste manually.", "err");
+    msg(isApp() ? "Tap the box and paste manually." : "Clipboard unavailable. Please paste manually.", "err");
     url.focus();
   }
 };
