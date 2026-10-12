@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#05070f">
+  <meta name="description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips free. Fast, easy, no signup required.">
+  <meta name="keywords" content="instagram video downloader, tiktok downloader, facebook video download, twitter video save, reels downloader free">
+  <meta name="robots" content="index, follow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="QuickSave">
+  <meta property="og:title" content="QuickSave - Free Instagram TikTok Facebook Twitter Video Downloader">
+  <meta property="og:description" content="Download Instagram Reels, TikTok, Facebook videos, Twitter clips for free.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/icon-192.png?v=2">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg?v=2">
+  <link rel="apple-touch-icon" href="/icon-192.png?v=2">
+  <link rel="apple-touch-startup-image" href="/icon-512.png?v=2">
+  <title>QuickSave — Free Instagram TikTok Facebook Twitter Video Downloader</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- Update Banner -->
+<div id="updateBanner" class="update-banner hide">
+  <span>🆕 New version available!</span>
+  <button id="updateNowBtn" class="update-btn">Update Now</button>
+</div>
+
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+
+<!-- iOS Install Banner -->
+<div id="iosInstall" class="ios-install hidden">
+  <div class="ios-install-content">
+    <div class="ios-install-icon">↧</div>
+    <div class="ios-install-text">
+      <strong>Install QuickSave on iPhone</strong>
+      <span>Tap <b>Share</b> ⎋ then <b>"Add to Home Screen"</b></span>
+    </div>
+    <button id="iosDismiss" class="ios-dismiss">✕</button>
+  </div>
+</div>
+
+<!-- AD OVERLAY - Download click ke baad -->
+<div id="adOverlay" class="ad-overlay hide">
+  <div class="ad-overlay-box">
+    <div class="ad-overlay-header">
+      <span class="ad-overlay-label">Advertisement</span>
+      <div class="ad-overlay-countdown">
+        <svg class="countdown-ring" viewBox="0 0 36 36">
+          <circle class="ring-bg"   cx="18" cy="18" r="15"/>
+          <circle class="ring-fill" id="ringProgress" cx="18" cy="18" r="15"/>
+        </svg>
+        <span id="countdownNum">5</span>
+      </div>
+    </div>
+    <div class="ad-content-area">
+      <div id="inpageAdSlot"></div>
+      <div class="ad-banner-slot" id="bannerAdSlot"></div>
+    </div>
+    <div class="ad-overlay-footer">
+      <span class="ad-skip-info">
+        Download starts in <strong id="skipCountdown">5</strong>s...
+      </span>
+      <button class="ad-skip-btn hide" id="adSkipBtn">
+        Download Now ⬇
+      </button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <nav>
+    <a class="brand" href="/">
+      <div class="brand-icon">↧</div>
+      <div class="brand-text">
+        <span class="brand-name">Quick<span>Save</span></span>
+        <span class="brand-sub">Video Downloader</span>
+      </div>
+    </a>
+    <div class="navright">
+      <button id="install" class="install hidden">⬇ Install</button>
+      <label class="autolabel" title="Auto-detect clipboard links">
+        <input type="checkbox" id="autoToggle">
+        <span class="slider"></span>
+      </label>
+      <span id="autoLabel" class="autotxt">Auto ON</span>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="platforms">
+      <span>📸 Instagram</span>
+      <span>🎵 TikTok</span>
+      <span>👥 Facebook</span>
+      <span>🐦 X</span>
+    </div>
+    <h1>Save any video.<br><i>In seconds.</i></h1>
+    <p>Paste a link, tap Get media, download. Free forever, no signup.</p>
+
+    <div id="queueStatus" class="queue-status hide">
+      <div class="queue-dot"></div>
+      <span id="queueText">Processing...</span>
+    </div>
+
+    <div id="bgStatus" class="bg-status hide">
+      <div id="bgStatusIcon" class="bg-icon">⏳</div>
+      <div class="bg-content">
+        <strong>Background Download</strong>
+        <span id="bgStatusText">Processing...</span>
+      </div>
+    </div>
+
+    <div id="drop" class="box">
+      <div class="droptext">🔗 Drop or paste a video link here</div>
+      <div class="input">
+        <span>⌁</span>
+        <input
+          id="url"
+          placeholder="Paste Instagram, TikTok, Facebook, or Twitter link..."
+          autocomplete="off" autocorrect="off"
+          autocapitalize="off" spellcheck="false"
+          type="url"
+        >
+        <button id="paste" type="button">Paste</button>
+      </div>
+      <button id="go" class="go" type="button">
+        Get media <strong>→</strong>
+      </button>
+      <div class="hint">✓ Free &nbsp;•&nbsp; No Signup &nbsp;•&nbsp; No Watermark</div>
+    </div>
+
+    <div id="status" class="status hide"></div>
+
+    <section id="result" class="result hide">
+      <div class="preview">
+        <div class="thumb" id="thumb" title="Click to preview"><span>▶</span></div>
+        <div class="fileinfo">
+          <small>READY TO SAVE</small>
+          <b id="name">media.mp4</b>
+          <em id="meta">Video</em>
+        </div>
+      </div>
+      <div class="progress hide" id="progress">
+        <div>
+          <span id="progressText">Preparing...</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <i><b id="bar"></b></i>
+      </div>
+      <!-- Result Banner Ad - sirf link paste ke baad dikhta hai -->
+      <div id="resultBannerAd" class="result-banner-ad hide"></div>
+      <a id="download" class="download" href="#">
+        ⬇ Download Video Free
+      </a>
+      <p class="dl-note">
+        Having trouble? <a href="#" id="retryBtn">Try again</a>
+      </p>
+    </section>
+
+    <button id="moreToggle" class="more-toggle" type="button">✨ Features &amp; FAQ</button>
+    <div id="moreWrap">
+    <section class="howto">
+      <h2>How to Download Videos</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Copy the link</strong>
+            <span>Open Instagram, TikTok, Facebook, or Twitter. Tap Share → Copy Link.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Paste and get media</strong>
+            <span>Paste the link above and tap "Get media" button.</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Download instantly</strong>
+            <span>Tap "Download Video Free" — file saves directly to your Downloads folder.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="features">
+      <article>
+        <b>📸</b>
+        <strong>Instagram Downloader</strong>
+        <span>Download Reels, posts, and IGTV videos in HD quality instantly.</span>
+      </article>
+      <article>
+        <b>🎵</b>
+        <strong>TikTok Downloader</strong>
+        <span>Save TikTok videos without watermark in original quality.</span>
+      </article>
+      <article>
+        <b>👥</b>
+        <strong>Facebook Downloader</strong>
+        <span>Save public Facebook videos in high quality with one click.</span>
+      </article>
+      <article>
+        <b>🐦</b>
+        <strong>Twitter / X Downloader</strong>
+        <span>Download Twitter videos and GIFs directly to your device.</span>
+      </article>
+    </div>
+
+    <section class="faq">
+      <h2>Frequently Asked Questions</h2>
+      <details>
+        <summary>Is QuickSave completely free?</summary>
+        <p>Yes! QuickSave is 100% free. No hidden charges, no subscription, no signup required.</p>
+      </details>
+      <details>
+        <summary>Can I download TikTok videos without watermark?</summary>
+        <p>Yes! We download TikTok videos without watermark in original quality.</p>
+      </details>
+      <details>
+        <summary>Can I download Instagram Reels without watermark?</summary>
+        <p>Yes! All videos are watermark-free in original quality.</p>
+      </details>
+      <details>
+        <summary>How do I download Facebook videos?</summary>
+        <p>Copy the Facebook video URL, paste it above, and click "Get media". Done!</p>
+      </details>
+      <details>
+        <summary>Does it work on iPhone and Android?</summary>
+        <p>Yes! Works on all devices. Install as app from browser for best experience.</p>
+      </details>
+      <details>
+        <summary>Are my downloads private?</summary>
+        <p>Yes. We do not store any URLs or videos. Everything is deleted immediately.</p>
+      </details>
+    </section>
+    </div>
+
+    <section class="donation-section">
+      <div class="donation-header">
+        <span class="donation-emoji">❤️</span>
+        <h3>Support QuickSave</h3>
+        <p>Your small donation keeps our servers running. Thank you! 🙏</p>
+      </div>
+      <div class="donation-buttons">
+        <button class="donate-btn upi-btn" id="donateUpiBtn" type="button">
+          <span class="donate-icon">💳</span>
+          <div class="donate-info">
+            <strong>Pay via UPI</strong>
+            <small>PhonePe, GPay, Paytm & more</small>
+          </div>
+        </button>
+        <a class="donate-btn paypal-btn"
+           href="https://www.paypal.me/nadeemhaidar"
+           target="_blank" rel="noopener">
+          <span class="donate-icon">🌐</span>
+          <div class="donate-info">
+            <strong>PayPal</strong>
+            <small>International payment</small>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <div id="upiModal" class="upi-modal hide">
+      <div class="upi-modal-box">
+        <button class="upi-modal-close" id="upiModalClose">✕</button>
+        <h3>💳 Choose UPI App</h3>
+        <p class="upi-id-text">UPI ID: <strong>nadeemhaidar4959@ybl</strong></p>
+        <div class="upi-apps-grid">
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>📱</span><strong>Any UPI</strong>
+          </a>
+          <a class="upi-app-btn" href="phonepe://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>💜</span><strong>PhonePe</strong>
+          </a>
+          <a class="upi-app-btn" href="tez://upi/pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🎯</span><strong>Google Pay</strong>
+          </a>
+          <a class="upi-app-btn" href="paytmmp://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>💙</span><strong>Paytm</strong>
+          </a>
+          <a class="upi-app-btn" href="bhim://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🇮🇳</span><strong>BHIM</strong>
+          </a>
+          <a class="upi-app-btn" href="upi://pay?pa=nadeemhaidar4959@ybl&pn=QuickSave&cu=INR">
+            <span>🏦</span><strong>Other</strong>
+          </a>
+        </div>
+        <p class="upi-note">App open hogi — amount daalein aur pay karein 🙏</p>
+      </div>
+    </div>
+
+    <div class="notice">
+      <b>⚠ Use responsibly.</b> Only download media you own or have permission to save.
+    </div>
+
+  </section>
+
+  <footer>
+    <span>© 2026 QuickSave — Free Video Downloader · <span id="siteVersion" class="ver">v…</span></span>
+    <div class="footer-links">
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+    </div>
+  </footer>
+</main>
+
+<!-- Sticky bottom banner ad: passive, hamesha visible -->
+<div id="stickyAd">
+  <iframe src="/ad-banner.html" title="Advertisement" scrolling="no" frameborder="0"></iframe>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
