@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- QuickSave ad-banner v9.1.9 : minimal banner page for the Android app's Downloads screen.
+     Not linked anywhere on the website; loaded only inside the app's banner WebView. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advertisement</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; min-height:100%;
+    background:#0b0b12;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .ad-wrap { width:100%; max-width:480px; padding:6px 4px; text-align:center; }
+  .ad-label {
+    font:600 9px/1 system-ui,-apple-system,sans-serif;
+    color:#5b5b6e; letter-spacing:3px; margin-bottom:5px;
+  }
+</style>
+</head>
+<body>
+  <div class="ad-wrap">
+    <div class="ad-label">AD</div>
+    <div id="ad-slot"></div>
+  </div>
+  <script>(function(s){s.dataset.zone='12015743',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+</body>
+</html>

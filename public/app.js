@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.8 */
-console.log("QuickSave v9.1.8 loaded");
+/* QuickSave app.js v9.1.9 */
+console.log("QuickSave v9.1.9 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
