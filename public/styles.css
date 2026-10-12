@@ -31,6 +31,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   /* Edge-to-edge WebView/PWA me status bar ke neeche content na kate */
   padding-top: env(safe-area-inset-top, 0px);
+  /* Sticky bottom ad ke peeche content na chhupe */
+  padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
 }
 main {
   max-width: 760px;
@@ -690,4 +692,25 @@ body.app-mode footer { margin-top: 18px; }
   .ad-skip-btn { width: 100%; display: flex; justify-content: center; }
   .result-banner-ad { min-height: 48px; }
   .doc { padding: 24px 14px 40px; }
+}
+
+/* ── Sticky bottom banner ad: passive, hamesha visible ── */
+#stickyAd {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 9990;
+  display: flex;
+  justify-content: center;
+  background: rgba(11, 11, 18, 0.97);
+  border-top: 1px solid rgba(139, 92, 246, 0.28);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  pointer-events: auto;
+}
+#stickyAd iframe {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: 60px;
+  border: 0;
+  overflow: hidden;
 }
