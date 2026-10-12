@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.4 */
-console.log("QuickSave v9.1.4 loaded");
+/* QuickSave app.js v9.1.5 */
+console.log("QuickSave v9.1.5 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -514,6 +514,8 @@ function setAuto(v) {
   localStorage.setItem("qs_auto", v ? "true" : "false");
   autoToggle.checked    = v;
   autoLabel.textContent = v ? "Auto ON" : "Auto OFF";
+  /* Android app ko bhi batao — background share-download isi se chalega */
+  try { window.QuickSaveApp?.setAutoDownload?.(!!v); } catch {}
 }
 autoToggle.addEventListener("change", () => setAuto(autoToggle.checked));
 
