@@ -1,5 +1,5 @@
-/* QuickSave app.js v8.9.5 */
-console.log("QuickSave v8.9.5 loaded");
+/* QuickSave app.js v9.0.0 */
+console.log("QuickSave v9.0.0 loaded");
 
 const AD_SECONDS   = 5;
 const ICON_VERSION = "2";
@@ -63,8 +63,14 @@ const RING_CIRC = 94.25;
 const SUPPORTED = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com", "vm.tiktok.com"
+  "tiktok.com", "vm.tiktok.com",
+  "youtube.com", "youtu.be", "music.youtube.com"
 ];
+function hostMatches(hostname, domain) {
+  const h = hostname.toLowerCase();
+  const d = domain.toLowerCase();
+  return h === d || h.endsWith("." + d);
+}
 
 /* ════════════════════════════════════════
    UTILS
@@ -84,7 +90,7 @@ function isStandalone() {
 function isSupportedUrl(u) {
   try {
     const h = new URL(u).hostname.replace(/^www\./, "");
-    return SUPPORTED.some(p => h.includes(p));
+    return SUPPORTED.some(p => hostMatches(h, p));
   } catch { return false; }
 }
 function sizeStr(n) {
@@ -519,7 +525,7 @@ async function startBgDownload(pageUrl) {
 ════════════════════════════════════════ */
 async function handleShare(sharedUrl) {
   if (!isSupportedUrl(sharedUrl)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X and YouTube links supported.", "err");
     return;
   }
   url.value = sharedUrl;
@@ -574,7 +580,7 @@ async function tryAutoPaste() {
 async function processUrl(value, autoDownload = false) {
   if (!value || autoProc) return;
   if (!isSupportedUrl(value)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
+    msg("Only Instagram, TikTok, Facebook, Twitter/X and YouTube links supported.", "err");
     return;
   }
 
@@ -620,7 +626,8 @@ async function processUrl(value, autoDownload = false) {
       instagram: "📸 Instagram",
       tiktok:    "🎵 TikTok",
       facebook:  "👥 Facebook",
-      twitter:   "🐦 Twitter/X"
+      twitter:   "🐦 Twitter/X",
+      youtube:   "▶️ YouTube"
     };
     meta.textContent =
       (platformEmoji[d.platform] || "📹 Video") + " • " +
