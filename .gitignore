@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Login cookies - NEVER commit (contains session secrets)
+cookies.txt
+
+# Temp downloads
+tmp/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
