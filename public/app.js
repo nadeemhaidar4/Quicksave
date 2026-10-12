@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.3 */
-console.log("QuickSave v9.1.3 loaded");
+/* QuickSave app.js v9.1.4 */
+console.log("QuickSave v9.1.4 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -138,6 +138,18 @@ if (isApp()) {
     btn.innerHTML = hidden ? "✨ Features & FAQ" : "▲ Show less";
     if (!hidden) setTimeout(() => wrap.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   });
+})();
+
+/* ════════════════════════════════════════
+   FOOTER VERSION — deploy verify karne ke liye
+════════════════════════════════════════ */
+(function showSiteVersion() {
+  const el = $("siteVersion");
+  if (!el) return;
+  fetch("/api/version")
+    .then(r => r.json())
+    .then(j => { if (j && j.version) el.textContent = "v" + j.version; })
+    .catch(() => { el.textContent = ""; });
 })();
 
 /* ════════════════════════════════════════

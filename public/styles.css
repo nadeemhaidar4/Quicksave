@@ -634,6 +634,7 @@ footer {
 .footer-links { display: flex; gap: 14px; }
 .footer-links a { color: var(--faint); text-decoration: none; font-size: 11px; transition: .2s; }
 .footer-links a:hover { color: #a78bfa; }
+.ver { color: var(--faint); font-size: 10px; }
 
 /* ── Doc pages (privacy / terms) ── */
 .doc { max-width: 680px; margin: 0 auto; padding: 32px 20px 48px; }
