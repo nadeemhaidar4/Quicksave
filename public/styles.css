@@ -29,6 +29,8 @@ body {
   overflow-x: hidden;
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
+  /* Edge-to-edge WebView/PWA me status bar ke neeche content na kate */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 main {
   max-width: 760px;
@@ -74,7 +76,7 @@ nav {
   border-radius: 18px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 24px rgba(0,0,0,0.28);
   position: sticky;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
   z-index: 100;
 }
 .brand {
@@ -146,7 +148,7 @@ input:checked + .slider::before { transform: translateX(18px); }
 
 /* ── Update Banner ── */
 .update-banner {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+  position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 9998;
   background: linear-gradient(135deg, rgba(139,92,246,0.94), rgba(34,211,238,0.94));
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
   padding: 10px 18px;

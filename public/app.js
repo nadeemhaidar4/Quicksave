@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.1.0 */
-console.log("QuickSave v9.1.0 loaded");
+/* QuickSave app.js v9.1.1 */
+console.log("QuickSave v9.1.1 loaded");
 
 const AD_SECONDS   = 5;
 const ICON_VERSION = "2";
@@ -231,6 +231,7 @@ function showResultAds() {
       resultBannerAd.appendChild(ins);
 
       injectBannerScript();
+      ensureAdRendered(resultBannerAd);
     } catch(e) {
       console.log("[ad] Result ad error:", e.message);
       showFallbackAd(resultBannerAd);
@@ -260,6 +261,26 @@ function showFallbackAd(container) {
          class="fallback-ad-btn">Donate 💙</a>
     </div>
   `;
+}
+
+/* ════════════════════════════════════════
+   AD RENDER CHECK — agar Monetag ne 3.5s me
+   kuch render nahi kiya to khaali box ki
+   jagah fallback dikhao (kabhi blank na lage)
+════════════════════════════════════════ */
+function adDidRender(container) {
+  if (!container) return false;
+  const ins = container.querySelector("ins.monetag-ad");
+  if (!ins) return true; /* fallback ya custom content pehle se hai */
+  return ins.querySelector("iframe") !== null || ins.children.length > 0;
+}
+function ensureAdRendered(container, delayMs = 3500) {
+  setTimeout(() => {
+    if (container && !adDidRender(container)) {
+      console.log("[ad] No ad rendered, showing fallback");
+      showFallbackAd(container);
+    }
+  }, delayMs);
 }
 
 /* ════════════════════════════════════════
@@ -294,6 +315,8 @@ function showAdOverlay(onComplete) {
 
   /* Overlay mein ad inject karo */
   injectOverlayAd();
+  /* Ad render na ho to fallback pakka */
+  ensureAdRendered(bannerAdSlot);
 
   adOverlay.classList.remove("hide");
   document.body.style.overflow = "hidden";
