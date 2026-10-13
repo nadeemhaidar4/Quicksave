@@ -231,17 +231,23 @@ function showIconUpdatePrompt() {
 }
 
 /* ════════════════════════════════════════
-   AD INJECT HELPER
-   Zone 12016300 = Banner Ad (nap5k.com)
+   AD INJECT HELPER — Adsterra 320x50 banner
+   via /ad-banner.html iframe (tag runs inside
+   the iframe so document.write is safe)
 ════════════════════════════════════════ */
-function injectBannerScript() {
-  const s = document.createElement("script");
-  s.src   = "https://nap5k.com/tag.min.js";
-  s.setAttribute("data-zone", "12016300");
-  s.setAttribute("data-cfasync", "false");
-  s.async = true;
-  document.body.appendChild(s);
-  console.log("[ad] Banner script injected - zone 12016300");
+function injectBannerIframe(container) {
+  if (!container) return;
+  container.innerHTML = "";
+  const f = document.createElement("iframe");
+  f.src = "/ad-banner.html";
+  f.width = "320";
+  f.height = "50";
+  f.scrolling = "no";
+  f.frameBorder = "0";
+  f.title = "Advertisement";
+  f.style.border = "0";
+  container.appendChild(f);
+  console.log("[ad] Adsterra banner iframe injected");
 }
 
 /* ════════════════════════════════════════
@@ -257,15 +263,8 @@ function showResultAds() {
     resultBannerAd.classList.remove("hide");
 
     try {
-      /* Banner ad inject karo result card mein */
-      const ins = document.createElement("ins");
-      ins.className = "monetag-ad";
-      ins.setAttribute("data-zone", "12016300");
-      resultBannerAd.innerHTML = "";
-      resultBannerAd.appendChild(ins);
-
-      injectBannerScript();
-      ensureAdRendered(resultBannerAd);
+      /* Adsterra banner iframe in result card */
+      injectBannerIframe(resultBannerAd);
     } catch(e) {
       console.log("[ad] Result ad error:", e.message);
       showFallbackAd(resultBannerAd);
@@ -298,15 +297,14 @@ function showFallbackAd(container) {
 }
 
 /* ════════════════════════════════════════
-   AD RENDER CHECK — agar Monetag ne 3.5s me
-   kuch render nahi kiya to khaali box ki
-   jagah fallback dikhao (kabhi blank na lage)
+   AD RENDER CHECK — iframe approach: the
+   /ad-banner.html iframe always renders, so
+   no fallback check needed (kept for safety)
 ════════════════════════════════════════ */
 function adDidRender(container) {
   if (!container) return false;
-  const ins = container.querySelector("ins.monetag-ad");
-  if (!ins) return true; /* fallback ya custom content pehle se hai */
-  return ins.querySelector("iframe") !== null || ins.children.length > 0;
+  if (container.querySelector("iframe")) return true;
+  return true; /* fallback ya custom content pehle se hai */
 }
 function ensureAdRendered(container, delayMs = 3500) {
   setTimeout(() => {
@@ -327,14 +325,8 @@ function injectOverlayAd() {
   overlayAdInjected = true;
 
   try {
-    const ins = document.createElement("ins");
-    ins.className = "monetag-ad";
-    ins.setAttribute("data-zone", "12016300");
-    bannerAdSlot.innerHTML = "";
-    bannerAdSlot.appendChild(ins);
-
-    injectBannerScript();
-    console.log("[ad] Overlay ad injected - zone 12016300");
+    injectBannerIframe(bannerAdSlot);
+    console.log("[ad] Overlay ad injected - Adsterra");
   } catch(e) {
     console.log("[ad] Overlay ad error:", e.message);
     showFallbackAd(bannerAdSlot);
