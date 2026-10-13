@@ -485,6 +485,26 @@ h1 i {
 .more-toggle:hover { border-color: rgba(139,92,246,0.5); color: #fff; }
 #moreWrap.hide { display: none !important; }
 
+/* ── Download History card (app only — native Downloads screen kholta hai) ── */
+.history-card {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; max-width: 600px;
+  margin: 22px auto 0; padding: 14px 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 16px; color: #f0f1f7;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  text-align: left;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  transition: .2s;
+}
+.history-card:hover { border-color: rgba(139,92,246,0.5); }
+.history-card-icon { font-size: 22px; }
+.history-card-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.history-card-text span { font-size: 12px; font-weight: 500; color: var(--dim); }
+.history-card-arrow { font-size: 18px; color: var(--dim); }
+.history-card.hide { display: none !important; }
+
 /* ── How To (compact) ── */
 .howto { max-width: 600px; margin: 26px auto 0; text-align: left; }
 .howto h2 { font-size: 17px; font-weight: 800; color: #f0f1f7; margin-bottom: 14px; text-align: center; letter-spacing: -0.2px; }

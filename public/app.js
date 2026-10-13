@@ -1,5 +1,5 @@
-/* QuickSave app.js v9.2.3 */
-console.log("QuickSave v9.2.3 loaded");
+/* QuickSave app.js v9.2.4 */
+console.log("QuickSave v9.2.4 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -124,6 +124,8 @@ function applyAppMode() {
   document.body.classList.add("app-mode");
   install?.classList.add("hidden");
   iosInstall?.classList.add("hidden");
+  // Download History card — sirf app me dikhao (native Downloads screen kholta hai)
+  document.getElementById("historyCard")?.classList.remove("hide");
   console.log("[app] App mode enabled");
 }
 applyAppMode();
@@ -142,6 +144,17 @@ setTimeout(applyAppMode, 1500);
     const hidden = wrap.classList.toggle("hide");
     btn.innerHTML = hidden ? "✨ Features & FAQ" : "▲ Show less";
     if (!hidden) setTimeout(() => wrap.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  });
+})();
+
+/* Download History card — tap → native Downloads screen (app only) */
+(function setupHistoryCard() {
+  const card = $("historyCard");
+  if (!card) return;
+  card.addEventListener("click", () => {
+    if (window.QuickSaveApp && typeof window.QuickSaveApp.openDownloads === "function") {
+      window.QuickSaveApp.openDownloads();
+    }
   });
 })();
 
