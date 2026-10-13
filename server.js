@@ -15,16 +15,16 @@ try { APP_VERSION = require("./package.json").version || APP_VERSION; } catch {}
 
 const app = express();
 
-/* Security headers (CSP tuned for inline scripts/styles + monetag ad tag) */
+/* Security headers (CSP tuned for inline scripts/styles + adsterra ad tag) */
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://nap5k.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://bellnewyork.org"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
-      frameSrc: ["'self'"],
+      frameSrc: ["'self'", "https://bellnewyork.org"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"]
     }
