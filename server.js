@@ -20,11 +20,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://bellnewyork.org"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://bellnewyork.org", "https://aqml.org"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'self'", "https://bellnewyork.org"],
+      connectSrc: ["'self'", "https://bellnewyork.org", "https://aqml.org"],
+      frameSrc: ["'self'", "https://bellnewyork.org", "https://aqml.org"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"]
     }
