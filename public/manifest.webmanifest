@@ -1,7 +1,7 @@
 {
-  "name": "QuickSave - Video Downloader",
-  "short_name": "QuickSave",
-  "description": "Download Instagram, TikTok, Facebook, Twitter videos instantly. Free, no signup.",
+  "name": "VidJar - Video Downloader",
+  "short_name": "VidJar",
+  "description": "Save videos from public links to watch offline. Fast and simple.",
   "start_url": "/?v=2",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],

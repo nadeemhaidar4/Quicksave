@@ -138,7 +138,7 @@ async function handleBgDownload({ url: pageUrl, id: dlId }) {
     if (!insp.ok || !insp.id) throw new Error(insp.message || "Extraction failed");
 
     const mediaId  = insp.id;
-    const filename = insp.filename || "QuickSave_video.mp4";
+    const filename = insp.filename || "VidJar_video.mp4";
 
     await broadcast({ type: "BG_STATUS", status: "downloading", filename, id: dlId });
 

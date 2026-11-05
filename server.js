@@ -217,12 +217,12 @@ function filenameFromUrl(url, contentType="", customTitle=null) {
       .replace(/\s+/g, "_")
       .slice(0, 40);
     if (!t) t = "Media";
-    return `QuickSave_${t}${ext}`;
+    return `VidJar_${t}${ext}`;
   }
   let n = "";
   try { n = decodeURIComponent(path.basename(new URL(url).pathname)); } catch {}
   n = n.replace(/[^a-zA-Z0-9._-]/g, "_");
-  return (!n || n === "." || n.length < 2) ? `QuickSave_Media${ext}` : n.slice(0, 50);
+  return (!n || n === "." || n.length < 2) ? `VidJar_Media${ext}` : n.slice(0, 50);
 }
 function getRawContentType(r) {
   return (r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
@@ -473,7 +473,7 @@ function streamTikTokViaYtdlp(pageUrl, res, filename) {
 
     proc.stdout.on("end", () => {
       if (totalBytes < 1000) {
-        reject(new Error("TikTok video download failed - no data received"));
+        reject(new Error("Video download failed - no data received"));
         return;
       }
       res.end();
@@ -496,7 +496,7 @@ function streamTikTokViaYtdlp(pageUrl, res, filename) {
 
     proc.on("close", code => {
       if (code !== 0 && totalBytes < 1000) {
-        reject(new Error(`TikTok download failed (exit code ${code})`));
+        reject(new Error(`Video download failed (exit code ${code})`));
       }
     });
   });
@@ -530,7 +530,7 @@ async function extractInstagram(url) {
       if (res?.url) { console.log(`[instagram] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[instagram] ✗ ${s.name}:`, e.message.slice(0, 80)); }
   }
-  throw new Error("Instagram video could not be extracted. It may be private or deleted.");
+  throw new Error("This video could not be extracted. It may be private or deleted.");
 }
 
 async function extractFacebook(url) {
@@ -559,7 +559,7 @@ async function extractFacebook(url) {
       if (res?.url) { console.log(`[facebook] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[facebook] ✗ ${s.name}:`, e.message.slice(0, 80)); }
   }
-  throw new Error("Facebook video could not be extracted. It may be private.");
+  throw new Error("This video could not be extracted. It may be private.");
 }
 
 async function extractTwitter(url) {
@@ -581,7 +581,7 @@ async function extractTwitter(url) {
       if (res?.url) { console.log(`[twitter] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[twitter] ✗ ${s.name}:`, e.message.slice(0, 80)); }
   }
-  throw new Error("Twitter/X video could not be extracted.");
+  throw new Error("This video could not be extracted.");
 }
 
 /* ── TikTok: JSON info + direct stream flag ── */
@@ -630,13 +630,13 @@ async function extractTikTok(url) {
       console.log(`[tiktok] ✗ ${s.name}:`, e.message.slice(0, 80));
     }
   }
-  throw new Error("TikTok video could not be extracted. Link may be invalid or expired.");
+  throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
 async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
-  if (!platform) throw new Error("Only Instagram, Facebook, Twitter/X and TikTok links are supported.");
+  if (!platform) throw new Error("Only public video links from supported platforms are supported.");
   if (platform === "instagram") return extractInstagram(pageUrl);
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
@@ -706,7 +706,7 @@ app.get("/api/version", (_req, res) => {
 ════════════════════════════════════════ */
 app.get("/health", (_req, res) => res.json({
   ok:      true,
-  service: "QuickSave",
+  service: "VidJar",
   version: APP_VERSION,
   memory:  `${getMemoryMB().toFixed(1)}MB`,
   queue: {
@@ -760,7 +760,7 @@ app.post("/api/inspect", async (req, res) => {
   if (!isSupportedUrl(targetUrlStr))
     return res.status(400).json({
       ok: false, type: "unsupported",
-      message: "Only Instagram, Facebook, Twitter/X and TikTok links are supported."
+      message: "Only public video links from supported platforms are supported."
     });
 
   /* Cache check */
@@ -950,7 +950,7 @@ app.get("/api/download", async (req, res) => {
         if (!isSupportedUrl(targetUrl)) {
           return res.status(400).json({
             ok: false,
-            message: "Only Instagram, Facebook, Twitter/X and TikTok links are supported."
+            message: "Only public video links from supported platforms are supported."
           });
         }
         originalUrl = targetUrl;
@@ -991,7 +991,7 @@ app.get("/api/download", async (req, res) => {
         if (!res.headersSent) {
           res.status(502).json({
             ok: false,
-            message: "TikTok download failed. Please try again."
+            message: "Video download failed. Please try again."
           });
         } else {
           res.destroy();

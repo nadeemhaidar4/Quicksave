@@ -26,7 +26,7 @@
         stroke="rgba(255,255,255,0.12)"
         stroke-width="2"/>
 
-  <!-- "Quick" text -->
+  <!-- "Vid" text -->
   <text
     x="256" y="218"
     font-family="'Arial Black','Arial Bold',Impact,Gadget,sans-serif"
@@ -37,13 +37,13 @@
     dominant-baseline="middle"
     letter-spacing="-4"
     filter="url(#sh)"
-  >Quick</text>
+  >Vid</text>
 
   <!-- Divider -->
   <rect x="72" y="272" width="368" height="3" rx="1.5"
         fill="rgba(255,255,255,0.20)"/>
 
-  <!-- "Save" text - light purple -->
+  <!-- "Jar" text - light purple -->
   <text
     x="256" y="358"
     font-family="'Arial Black','Arial Bold',Impact,Gadget,sans-serif"
@@ -54,6 +54,6 @@
     dominant-baseline="middle"
     letter-spacing="-4"
     filter="url(#sh)"
-  >Save</text>
+  >Jar</text>
 
 </svg>

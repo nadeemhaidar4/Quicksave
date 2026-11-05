@@ -1,4 +1,4 @@
-/* QuickSave app.js v9.2.4 */
+/* VidJar app.js v9.2.4 */
 console.log("QuickSave v9.2.4 loaded");
 
 const AD_SECONDS   = 5;
@@ -286,7 +286,7 @@ function showFallbackAd(container) {
     <div class="fallback-ad">
       <span>❤️</span>
       <div>
-        <strong>Enjoying QuickSave?</strong>
+        <strong>Enjoying VidJar?</strong>
         <small>Support us with a small donation</small>
       </div>
       <a href="https://www.paypal.me/nadeemhaidar"
@@ -628,7 +628,7 @@ async function startBgDownload(pageUrl) {
 ════════════════════════════════════════ */
 async function handleShare(sharedUrl) {
   if (!isSupportedUrl(sharedUrl)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
+    msg("Only public video links from supported platforms are supported.", "err");
     return;
   }
   url.value = sharedUrl;
@@ -689,7 +689,7 @@ async function tryAutoPaste() {
 async function processUrl(value, autoDownload = false) {
   if (!value || autoProc) return;
   if (!isSupportedUrl(value)) {
-    msg("Only Instagram, TikTok, Facebook, Twitter/X links supported.", "err");
+    msg("Only public video links from supported platforms are supported.", "err");
     return;
   }
 
@@ -732,10 +732,10 @@ async function processUrl(value, autoDownload = false) {
     mediaName.textContent = d.filename || "media.mp4";
 
     const platformEmoji = {
-      instagram: "📸 Instagram",
-      tiktok:    "🎵 TikTok",
-      facebook:  "👥 Facebook",
-      twitter:   "🐦 Twitter/X"
+      instagram: "📹 Video",
+      tiktok:    "📹 Video",
+      facebook:  "📹 Video",
+      twitter:   "📹 Video"
     };
     meta.textContent =
       (platformEmoji[d.platform] || "📹 Video") + " • " +
@@ -744,7 +744,7 @@ async function processUrl(value, autoDownload = false) {
 
     showPreview(d);
     downloadBtn.href = buildDlUrl(d);
-    downloadBtn.setAttribute("download", d.filename || "QuickSave_Media.mp4");
+    downloadBtn.setAttribute("download", d.filename || "VidJar_Media.mp4");
     /* Naya result — button wapas active */
     downloadBtn.style.opacity       = "";
     downloadBtn.style.pointerEvents = "";
@@ -807,7 +807,7 @@ async function doActualDownload(d) {
     const buffer = await response.arrayBuffer();
 
     const savedName = await saveFileToDevice(
-      buffer, d.filename || "QuickSave_video.mp4", ct
+      buffer, d.filename || "VidJar_video.mp4", ct
     );
 
     bar.style.width          = "100%";

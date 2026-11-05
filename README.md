@@ -1,4 +1,4 @@
-# QuickSave Ultimate
+# VidJar Ultimate
 
 Features:
 - Animated download state/progress UI
