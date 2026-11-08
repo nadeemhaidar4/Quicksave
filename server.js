@@ -337,7 +337,7 @@ execFile(YTDLP_BINARY, ["--version"], { timeout: 15000 }, (err, stdout) => {
   }
 });
 
-function runYtdlp(url, extraArgs, timeoutMs = 60000) {
+function runYtdlp(url, extraArgs, timeoutMs = 60000, skipCookies = false) {
   return new Promise((resolve, reject) => {
     const args = [
       url,
@@ -350,7 +350,7 @@ function runYtdlp(url, extraArgs, timeoutMs = 60000) {
       "--js-runtimes", "node",
       ...extraArgs
     ];
-    if (fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
+    if (!skipCookies && fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
 
     execFile(YTDLP_BINARY, args, {
       timeout:   timeoutMs,
@@ -751,7 +751,7 @@ async function extractYouTube(url) {
   for (const s of strategies) {
     try {
       console.log(`[youtube] Trying: ${s.name}`);
-      const out = await runYtdlp(url, s.args);
+      const out = await runYtdlp(url, s.args, 60000, true);
       const res = parseYtdlpOutput(out);
       if (res?.url) { console.log(`[youtube] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[youtube] ✗ ${s.name}:`, e.message.slice(0, 80)); }
