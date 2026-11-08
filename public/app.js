@@ -711,10 +711,22 @@ async function processUrl(value, autoDownload = false) {
   try {
     msg("Fetching media info...");
 
+    /* Instagram session cookie (only inside the VidJar Android app, via the
+       native VidJarBridge): lets the server fetch the reel as the logged-in
+       user instead of as an anonymous server, so fewer 400 errors. In a
+       normal browser the bridge does not exist and nothing is sent. */
+    let igCookies = "";
+    try {
+      if (window.VidJarBridge && typeof window.VidJarBridge.getInstagramCookies === "function")
+        igCookies = window.VidJarBridge.getInstagramCookies() || "";
+    } catch (e) { igCookies = ""; }
+    const inspectBody = { url: value };
+    if (igCookies) inspectBody.cookies = igCookies;
+
     const r = await fetch("/api/inspect", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ url: value })
+      body:    JSON.stringify(inspectBody)
     });
     const d = await r.json();
     updateQ();
