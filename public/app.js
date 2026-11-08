@@ -67,7 +67,8 @@ const RING_CIRC = 94.25;
 const SUPPORTED = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com", "vm.tiktok.com"
+  "tiktok.com", "vm.tiktok.com",
+  "youtube.com", "youtu.be"
 ];
 function hostMatches(hostname, domain) {
   const h = hostname.toLowerCase();
