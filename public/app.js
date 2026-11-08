@@ -1,5 +1,5 @@
-/* VidJar app.js v9.2.4 */
-console.log("QuickSave v9.2.4 loaded");
+/* VidJar app.js v9.2.6 */
+console.log("QuickSave v9.2.6 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
