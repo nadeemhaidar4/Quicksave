@@ -5,7 +5,6 @@ const net = require("net");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
-const os = require("os");
 const { Readable, Writable } = require("stream");
 const { pipeline } = require("stream/promises");
 const { execFile, spawn } = require("child_process");
@@ -293,52 +292,50 @@ function cacheExtraction(originalUrl, extractedData) {
 /* ════════════════════════════════════════
    yt-dlp BINARY
 ════════════════════════════════════════ */
+/* A yt-dlp binary is only usable if it is a real file of a sane size
+   (~10MB). A failed/partial download is tiny or empty — never use it. */
+function isUsableBinary(p) {
+  try {
+    const st = fs.statSync(p);
+    return st.isFile() && st.size > 1000000;
+  } catch { return false; }
+}
+
 function getYtdlpBinary() {
+  const home = process.env.HOME || "";
   const locations = [
+    process.env.YTDLP_PATH,
     "/usr/local/bin/yt-dlp",
     "/usr/bin/yt-dlp",
-    process.env.YTDLP_PATH
+    home ? path.join(home, ".local", "bin", "yt-dlp") : null,
+    path.join(__dirname, "bin", "yt-dlp")
   ].filter(Boolean);
   for (const loc of locations) {
-    try { if (fs.existsSync(loc)) return loc; } catch {}
+    try { if (isUsableBinary(loc)) return loc; } catch {}
   }
   try {
     const pkg = require("youtube-dl-exec");
     const b   = pkg.path || pkg.binaryPath;
-    if (b && fs.existsSync(b)) return b;
+    if (b && isUsableBinary(b)) return b;
   } catch {}
   return "yt-dlp";
 }
 const YTDLP_BINARY = getYtdlpBinary();
 console.log(`[yt-dlp] Binary: ${YTDLP_BINARY}`);
 
-/* Per-request user cookies (Instagram session) -> temp Netscape file for yt-dlp.
-   The cookie string is NEVER logged and NEVER stored permanently: the temp file
-   is deleted right after yt-dlp finishes (success or failure). Only the
-   "sessionid" style login cookie is needed; the app sends it, the server uses
-   it once for this request and throws it away. */
-function writeTempCookiesFile(cookieString) {
-  if (!cookieString || typeof cookieString !== "string") return null;
-  const pairs = cookieString.split(";").map(x => x.trim()).filter(Boolean);
-  const lines = ["# Netscape HTTP Cookie File", ""];
-  let count = 0;
-  for (const p of pairs) {
-    const eq = p.indexOf("=");
-    if (eq <= 0) continue;
-    const name  = p.slice(0, eq).trim();
-    const value = p.slice(eq + 1).trim();
-    if (!name || !value) continue;
-    if (/[\r\n\t]/.test(name) || /[\r\n\t]/.test(value)) continue;
-    lines.push(`.instagram.com\tTRUE\t/\tTRUE\t0\t${name}\t${value}`);
-    count++;
+/* Startup version check — so /health shows the real yt-dlp version and we
+   can tell whether the latest build actually deployed. */
+let YTDLP_VERSION = "unknown";
+execFile(YTDLP_BINARY, ["--version"], { timeout: 15000 }, (err, stdout) => {
+  if (!err && stdout) {
+    YTDLP_VERSION = String(stdout).trim().split("\n")[0];
+    console.log(`[yt-dlp] Version: ${YTDLP_VERSION}`);
+  } else {
+    console.log("[yt-dlp] Version check failed");
   }
-  if (count === 0) return null;
-  const tmp = path.join(os.tmpdir(), `vidjar-cookies-${crypto.randomBytes(8).toString("hex")}.txt`);
-  fs.writeFileSync(tmp, lines.join("\n") + "\n", "utf8");
-  return tmp;
-}
+});
 
-function runYtdlp(url, extraArgs, timeoutMs = 60000, cookieString = null) {
+function runYtdlp(url, extraArgs, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
     const args = [
       url,
@@ -350,21 +347,13 @@ function runYtdlp(url, extraArgs, timeoutMs = 60000, cookieString = null) {
       "--no-cache-dir",
       ...extraArgs
     ];
-    /* Per-request user cookies win over the static cookies.txt (if any). */
-    let tempCookies = null;
-    if (cookieString) {
-      tempCookies = writeTempCookiesFile(cookieString);
-      if (tempCookies) args.push("--cookies", tempCookies);
-    } else if (fs.existsSync(COOKIES_FILE)) {
-      args.push("--cookies", COOKIES_FILE);
-    }
+    if (fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
 
     execFile(YTDLP_BINARY, args, {
       timeout:   timeoutMs,
       maxBuffer: 30 * 1024 * 1024,
       env:       { ...process.env, PYTHONIOENCODING: "utf-8" }
     }, (error, stdout, stderr) => {
-      if (tempCookies) { try { fs.unlinkSync(tempCookies); } catch {} }
       if (error) {
         const raw = (stderr || error.message || "").trim();
         console.error("[yt-dlp] failed:", raw.slice(0, 300));
@@ -540,27 +529,62 @@ function streamTikTokViaYtdlp(pageUrl, res, filename) {
 /* ════════════════════════════════════════
    EXTRACTORS
 ════════════════════════════════════════ */
-async function extractInstagram(url, cookieString = null) {
+/* Instagram reel shortcode se embed URL banao (kabhi-kabhi embed bina login
+   ke video deta hai jab normal page 400 de). */
+function toInstagramEmbedUrl(u) {
+  try {
+    const m = String(u).match(/instagram\.com\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+    if (!m) return null;
+    return `https://www.instagram.com/reel/${m[1]}/embed/`;
+  } catch { return null; }
+}
+
+async function extractInstagram(url) {
+  const embedUrl = toInstagramEmbedUrl(url);
   const strategies = [
     {
-      name: "chrome",
+      name: "chrome-new",
       args: [
         "-f", "best",
-        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "--add-header", "Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "--add-header", "Accept-Language:en-US,en;q=0.9",
+        "--add-header", "Referer:https://www.instagram.com/",
+        "--add-header", "Sec-Fetch-Dest:document",
+        "--add-header", "Sec-Fetch-Mode:navigate",
+        "--add-header", "Sec-Fetch-Site:cross-site",
+      ]
+    },
+    {
+      name: "mobile-web",
+      args: [
+        "-f", "best",
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
         "--add-header", "Accept-Language:en-US,en;q=0.9",
         "--add-header", "Referer:https://www.instagram.com/",
       ]
     },
     {
-      name: "android",
+      name: "android-app",
       args: ["-f", "best", "--add-header", "User-Agent:Instagram 219.0.0.12.117 Android"]
+    },
+    {
+      name: "embed",
+      url: embedUrl,
+      args: [
+        "-f", "best",
+        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "--add-header", "Referer:https://www.instagram.com/",
+      ]
     },
     { name: "default", args: ["-f", "best"] }
   ];
   for (const s of strategies) {
+    const tryUrl = s.url || url;
+    if (!tryUrl) continue;
     try {
       console.log(`[instagram] Trying: ${s.name}`);
-      const out = await runYtdlp(url, s.args, 60000, cookieString);
+      const out = await runYtdlp(tryUrl, s.args);
       const res = parseYtdlpOutput(out);
       if (res?.url) { console.log(`[instagram] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[instagram] ✗ ${s.name}:`, e.message.slice(0, 80)); }
@@ -668,11 +692,11 @@ async function extractTikTok(url) {
   throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
-async function extractDirectVideoUrl(pageUrl, cookieString = null) {
+async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
   if (!platform) throw new Error("Only public video links from supported platforms are supported.");
-  if (platform === "instagram") return extractInstagram(pageUrl, cookieString);
+  if (platform === "instagram") return extractInstagram(pageUrl);
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
@@ -751,6 +775,7 @@ app.get("/health", (_req, res) => res.json({
     maxQueueSize:  MAX_QUEUE_SIZE
   },
   ytdlp:   YTDLP_BINARY,
+  ytdlpVersion: YTDLP_VERSION,
   cookies: fs.existsSync(COOKIES_FILE)
 }));
 
@@ -826,7 +851,7 @@ app.post("/api/inspect", async (req, res) => {
     const result = await queue.add(async () => {
       console.log(`[inspect] Processing: ${targetUrlStr.slice(0, 60)}`);
 
-      const data = await extractDirectVideoUrl(targetUrlStr, req.body?.cookies || null);
+      const data = await extractDirectVideoUrl(targetUrlStr);
       const c    = cacheExtraction(targetUrlStr, data);
 
       /* TikTok ke liye alag response - CDN validate nahi karte */
