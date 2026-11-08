@@ -719,6 +719,22 @@ async function extractYouTube(url) {
       ]
     },
     {
+      name: "tv-client",
+      args: [
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
+        "--extractor-args", "youtube:player_client=tv_embedded",
+        "--add-header", "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36",
+      ]
+    },
+    {
+      name: "mweb-client",
+      args: [
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
+        "--extractor-args", "youtube:player_client=mweb",
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
+      ]
+    },
+    {
       name: "web",
       args: [
         "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
