@@ -126,6 +126,9 @@ function applyAppMode() {
   iosInstall?.classList.add("hidden");
   // Download History card — sirf app me dikhao (native Downloads screen kholta hai)
   document.getElementById("historyCard")?.classList.remove("hide");
+  // Instagram login card — sirf app me dikhao (VidJarBridge hone par)
+  if (window.VidJarBridge && typeof window.VidJarBridge.openInstagramLogin === "function")
+    document.getElementById("igLoginCard")?.classList.remove("hide");
   console.log("[app] App mode enabled");
 }
 applyAppMode();
@@ -154,6 +157,39 @@ setTimeout(applyAppMode, 1500);
   card.addEventListener("click", () => {
     if (window.QuickSaveApp && typeof window.QuickSaveApp.openDownloads === "function") {
       window.QuickSaveApp.openDownloads();
+    }
+  });
+})();
+
+/* Instagram login card — app only (VidJarBridge). Tap → Instagram login page
+   khulta hai (app ke WebView me); login ke baad session cookie phone par save
+   hoti hai aur /api/inspect ke saath server ko jati hai, taaki reels ka 400
+   error kam ho. Dobara tap → logout (cookie delete). */
+(function setupIgLoginCard() {
+  const card = $("igLoginCard");
+  if (!card) return;
+  const bridge = window.VidJarBridge;
+  if (!bridge || typeof bridge.openInstagramLogin !== "function") return;
+  const title = $("igLoginTitle"), sub = $("igLoginSub");
+  function refresh() {
+    let loggedIn = false;
+    try { loggedIn = bridge.isInstagramLoggedIn && bridge.isInstagramLoggedIn(); } catch (e) {}
+    if (title) title.textContent = loggedIn ? "Instagram: Logged in ✓" : "Login to Instagram";
+    if (sub) sub.textContent = loggedIn
+      ? "Tap to logout — your session stays on your phone"
+      : "Fewer errors on reels — your login stays on your phone";
+  }
+  refresh();
+  window.addEventListener("load", refresh);
+  setTimeout(refresh, 1500);
+  card.addEventListener("click", () => {
+    let loggedIn = false;
+    try { loggedIn = bridge.isInstagramLoggedIn && bridge.isInstagramLoggedIn(); } catch (e) {}
+    if (loggedIn) {
+      try { bridge.logoutInstagram(); } catch (e) {}
+      refresh();
+    } else {
+      bridge.openInstagramLogin();
     }
   });
 })();
