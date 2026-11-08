@@ -719,22 +719,6 @@ async function extractYouTube(url) {
       ]
     },
     {
-      name: "tv-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=tv_embedded",
-        "--add-header", "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36",
-      ]
-    },
-    {
-      name: "mweb-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=mweb",
-        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
-      ]
-    },
-    {
       name: "web",
       args: [
         "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
@@ -748,13 +732,18 @@ async function extractYouTube(url) {
       args: ["-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best"]
     }
   ];
-  for (const s of strategies) {
-    try {
-      console.log(`[youtube] Trying: ${s.name}`);
-      const out = await runYtdlp(url, s.args, 60000, true);
-      const res = parseYtdlpOutput(out);
-      if (res?.url) { console.log(`[youtube] ✓ ${s.name}`); return res; }
-    } catch(e) { console.log(`[youtube] ✗ ${s.name}:`, e.message.slice(0, 80)); }
+  // Two passes: first WITHOUT cookies (anonymous works for many videos),
+  // then WITH cookies (dummy account) for videos that demand sign-in.
+  for (const skipCookies of [true, false]) {
+    const pass = skipCookies ? "no-cookies" : "with-cookies";
+    for (const s of strategies) {
+      try {
+        console.log(`[youtube] Trying: ${s.name} (${pass})`);
+        const out = await runYtdlp(url, s.args, 60000, skipCookies);
+        const res = parseYtdlpOutput(out);
+        if (res?.url) { console.log(`[youtube] ✓ ${s.name} (${pass})`); return res; }
+      } catch(e) { console.log(`[youtube] ✗ ${s.name} (${pass}):`, e.message.slice(0, 80)); }
+    }
   }
   throw new Error("This video could not be extracted. It may be private or deleted.");
 }
