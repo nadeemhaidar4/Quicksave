@@ -5,6 +5,7 @@ const net = require("net");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
+const os = require("os");
 const { Readable, Writable } = require("stream");
 const { pipeline } = require("stream/promises");
 const { execFile, spawn } = require("child_process");
@@ -311,7 +312,33 @@ function getYtdlpBinary() {
 const YTDLP_BINARY = getYtdlpBinary();
 console.log(`[yt-dlp] Binary: ${YTDLP_BINARY}`);
 
-function runYtdlp(url, extraArgs, timeoutMs = 60000) {
+/* Per-request user cookies (Instagram session) -> temp Netscape file for yt-dlp.
+   The cookie string is NEVER logged and NEVER stored permanently: the temp file
+   is deleted right after yt-dlp finishes (success or failure). Only the
+   "sessionid" style login cookie is needed; the app sends it, the server uses
+   it once for this request and throws it away. */
+function writeTempCookiesFile(cookieString) {
+  if (!cookieString || typeof cookieString !== "string") return null;
+  const pairs = cookieString.split(";").map(x => x.trim()).filter(Boolean);
+  const lines = ["# Netscape HTTP Cookie File", ""];
+  let count = 0;
+  for (const p of pairs) {
+    const eq = p.indexOf("=");
+    if (eq <= 0) continue;
+    const name  = p.slice(0, eq).trim();
+    const value = p.slice(eq + 1).trim();
+    if (!name || !value) continue;
+    if (/[\r\n\t]/.test(name) || /[\r\n\t]/.test(value)) continue;
+    lines.push(`.instagram.com\tTRUE\t/\tTRUE\t0\t${name}\t${value}`);
+    count++;
+  }
+  if (count === 0) return null;
+  const tmp = path.join(os.tmpdir(), `vidjar-cookies-${crypto.randomBytes(8).toString("hex")}.txt`);
+  fs.writeFileSync(tmp, lines.join("\n") + "\n", "utf8");
+  return tmp;
+}
+
+function runYtdlp(url, extraArgs, timeoutMs = 60000, cookieString = null) {
   return new Promise((resolve, reject) => {
     const args = [
       url,
@@ -323,13 +350,21 @@ function runYtdlp(url, extraArgs, timeoutMs = 60000) {
       "--no-cache-dir",
       ...extraArgs
     ];
-    if (fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
+    /* Per-request user cookies win over the static cookies.txt (if any). */
+    let tempCookies = null;
+    if (cookieString) {
+      tempCookies = writeTempCookiesFile(cookieString);
+      if (tempCookies) args.push("--cookies", tempCookies);
+    } else if (fs.existsSync(COOKIES_FILE)) {
+      args.push("--cookies", COOKIES_FILE);
+    }
 
     execFile(YTDLP_BINARY, args, {
       timeout:   timeoutMs,
       maxBuffer: 30 * 1024 * 1024,
       env:       { ...process.env, PYTHONIOENCODING: "utf-8" }
     }, (error, stdout, stderr) => {
+      if (tempCookies) { try { fs.unlinkSync(tempCookies); } catch {} }
       if (error) {
         const raw = (stderr || error.message || "").trim();
         console.error("[yt-dlp] failed:", raw.slice(0, 300));
@@ -505,7 +540,7 @@ function streamTikTokViaYtdlp(pageUrl, res, filename) {
 /* ════════════════════════════════════════
    EXTRACTORS
 ════════════════════════════════════════ */
-async function extractInstagram(url) {
+async function extractInstagram(url, cookieString = null) {
   const strategies = [
     {
       name: "chrome",
@@ -525,7 +560,7 @@ async function extractInstagram(url) {
   for (const s of strategies) {
     try {
       console.log(`[instagram] Trying: ${s.name}`);
-      const out = await runYtdlp(url, s.args);
+      const out = await runYtdlp(url, s.args, 60000, cookieString);
       const res = parseYtdlpOutput(out);
       if (res?.url) { console.log(`[instagram] ✓ ${s.name}`); return res; }
     } catch(e) { console.log(`[instagram] ✗ ${s.name}:`, e.message.slice(0, 80)); }
@@ -633,11 +668,11 @@ async function extractTikTok(url) {
   throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
-async function extractDirectVideoUrl(pageUrl) {
+async function extractDirectVideoUrl(pageUrl, cookieString = null) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
   if (!platform) throw new Error("Only public video links from supported platforms are supported.");
-  if (platform === "instagram") return extractInstagram(pageUrl);
+  if (platform === "instagram") return extractInstagram(pageUrl, cookieString);
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
@@ -791,7 +826,7 @@ app.post("/api/inspect", async (req, res) => {
     const result = await queue.add(async () => {
       console.log(`[inspect] Processing: ${targetUrlStr.slice(0, 60)}`);
 
-      const data = await extractDirectVideoUrl(targetUrlStr);
+      const data = await extractDirectVideoUrl(targetUrlStr, req.body?.cookies || null);
       const c    = cacheExtraction(targetUrlStr, data);
 
       /* TikTok ke liye alag response - CDN validate nahi karte */
