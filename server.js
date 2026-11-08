@@ -251,7 +251,6 @@ function getPlatform(urlStr) {
     if (hostMatches(h, "facebook.com") || hostMatches(h, "fb.watch")) return "facebook";
     if (hostMatches(h, "twitter.com")  || hostMatches(h, "x.com"))    return "twitter";
     if (hostMatches(h, "tiktok.com"))                                return "tiktok";
-    if (hostMatches(h, "youtube.com") || hostMatches(h, "youtu.be"))   return "youtube";
     return null;
   } catch { return null; }
 }
@@ -259,8 +258,7 @@ function getPlatform(urlStr) {
 const SUPPORTED_DOMAINS = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com",
-  "youtube.com", "youtu.be"
+  "tiktok.com"
 ];
 const CDN_BLOCKLIST = ["cdninstagram.com", "fbcdn.net", "twimg.com", "googlevideo.com"];
 
@@ -337,7 +335,7 @@ execFile(YTDLP_BINARY, ["--version"], { timeout: 15000 }, (err, stdout) => {
   }
 });
 
-function runYtdlp(url, extraArgs, timeoutMs = 60000, skipCookies = false) {
+function runYtdlp(url, extraArgs, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
     const args = [
       url,
@@ -350,7 +348,7 @@ function runYtdlp(url, extraArgs, timeoutMs = 60000, skipCookies = false) {
       "--js-runtimes", "node",
       ...extraArgs
     ];
-    if (!skipCookies && fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
+    if (fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
 
     execFile(YTDLP_BINARY, args, {
       timeout:   timeoutMs,
@@ -695,75 +693,6 @@ async function extractTikTok(url) {
   throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
-/* YouTube: single-file MP4 (video+audio) only — merged DASH formats have no
-   direct URL for --dump-single-json, so "best" alone would return video-only.
-   "best[ext=mp4]" picks the best combined MP4 (usually 720p/360p). YouTube's
-   bot check blocks the web client most often, so try the player clients in
-   order of reliability: android, ios, tv_embedded, mweb, then web, default. */
-async function extractYouTube(url) {
-  const strategies = [
-    {
-      name: "android-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=android",
-        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
-      ]
-    },
-    {
-      name: "ios-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=ios",
-        "--add-header", "User-Agent:Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-      ]
-    },
-    {
-      name: "tv-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=tv_embedded",
-        "--add-header", "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36",
-      ]
-    },
-    {
-      name: "mweb-client",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--extractor-args", "youtube:player_client=mweb",
-        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
-      ]
-    },
-    {
-      name: "web",
-      args: [
-        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
-        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "--add-header", "Accept-Language:en-US,en;q=0.9",
-        "--add-header", "Referer:https://www.youtube.com/",
-      ]
-    },
-    {
-      name: "default",
-      args: ["-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best"]
-    }
-  ];
-  // Two passes: first WITHOUT cookies (anonymous works for many videos),
-  // then WITH cookies (dummy account) for videos that demand sign-in.
-  for (const skipCookies of [true, false]) {
-    const pass = skipCookies ? "no-cookies" : "with-cookies";
-    for (const s of strategies) {
-      try {
-        console.log(`[youtube] Trying: ${s.name} (${pass})`);
-        const out = await runYtdlp(url, s.args, 60000, skipCookies);
-        const res = parseYtdlpOutput(out);
-        if (res?.url) { console.log(`[youtube] ✓ ${s.name} (${pass})`); return res; }
-      } catch(e) { console.log(`[youtube] ✗ ${s.name} (${pass}):`, e.message.slice(0, 80)); }
-    }
-  }
-  throw new Error("This video could not be extracted. It may be private or deleted.");
-}
-
 async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
@@ -772,7 +701,6 @@ async function extractDirectVideoUrl(pageUrl) {
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
-  if (platform === "youtube")   return extractYouTube(pageUrl);
   throw new Error("Unsupported platform.");
 }
 
@@ -1222,17 +1150,6 @@ app.use((err, _req, res, next) => {
 const server = app.listen(PORT, "0.0.0.0", () =>
   console.log(`QuickSave v${APP_VERSION} running on port ${PORT}`)
 );
-/* YouTube cookies via env var (Render): write YOUTUBE_COOKIES to cookies.txt at startup.
-   The repo is public, so cookies must never be committed — they live only in the
-   Render dashboard as an env var. */
-if (process.env.YOUTUBE_COOKIES) {
-  try {
-    fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES);
-    console.log("[cookies] wrote cookies.txt from YOUTUBE_COOKIES env var");
-  } catch (e) {
-    console.error("[cookies] failed to write cookies.txt from env var:", e.message);
-  }
-}
 if (fs.existsSync(COOKIES_FILE)) {
   console.log("[cookies] cookies.txt active - will be used for yt-dlp");
 } else {
