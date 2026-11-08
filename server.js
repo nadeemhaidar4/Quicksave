@@ -251,6 +251,7 @@ function getPlatform(urlStr) {
     if (hostMatches(h, "facebook.com") || hostMatches(h, "fb.watch")) return "facebook";
     if (hostMatches(h, "twitter.com")  || hostMatches(h, "x.com"))    return "twitter";
     if (hostMatches(h, "tiktok.com"))                                return "tiktok";
+    if (hostMatches(h, "pinterest.com") || hostMatches(h, "pin.it"))   return "pinterest";
     return null;
   } catch { return null; }
 }
@@ -258,7 +259,8 @@ function getPlatform(urlStr) {
 const SUPPORTED_DOMAINS = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com"
+  "tiktok.com",
+  "pinterest.com", "pin.it"
 ];
 const CDN_BLOCKLIST = ["cdninstagram.com", "fbcdn.net", "twimg.com", "googlevideo.com"];
 
@@ -693,6 +695,29 @@ async function extractTikTok(url) {
   throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
+async function extractPinterest(url) {
+  const strategies = [
+    {
+      name: "chrome",
+      args: [
+        "-f", "best[ext=mp4]/best",
+        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "--add-header", "Referer:https://www.pinterest.com/",
+      ]
+    },
+    { name: "default", args: ["-f", "best[ext=mp4]/best"] }
+  ];
+  for (const s of strategies) {
+    try {
+      console.log(`[pinterest] Trying: ${s.name}`);
+      const out = await runYtdlp(url, s.args);
+      const res = parseYtdlpOutput(out);
+      if (res?.url) { console.log(`[pinterest] ✓ ${s.name}`); return res; }
+    } catch(e) { console.log(`[pinterest] ✗ ${s.name}:`, e.message.slice(0, 80)); }
+  }
+  throw new Error("This video could not be extracted. It may be an image pin, or the pin may be private.");
+}
+
 async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
@@ -701,6 +726,7 @@ async function extractDirectVideoUrl(pageUrl) {
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
+  if (platform === "pinterest") return extractPinterest(pageUrl);
   throw new Error("Unsupported platform.");
 }
 
