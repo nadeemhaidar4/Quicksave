@@ -347,6 +347,7 @@ function runYtdlp(url, extraArgs, timeoutMs = 60000) {
       "--socket-timeout", "20",
       "--retries", "2",
       "--no-cache-dir",
+      "--js-runtimes", "node",
       ...extraArgs
     ];
     if (fs.existsSync(COOKIES_FILE)) args.push("--cookies", COOKIES_FILE);
