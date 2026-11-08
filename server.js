@@ -696,10 +696,43 @@ async function extractTikTok(url) {
 
 /* YouTube: single-file MP4 (video+audio) only — merged DASH formats have no
    direct URL for --dump-single-json, so "best" alone would return video-only.
-   "best[ext=mp4]" picks the best combined MP4 (usually 720p/360p). The android
-   player-client strategy helps when the web client hits the bot check. */
+   "best[ext=mp4]" picks the best combined MP4 (usually 720p/360p). YouTube's
+   bot check blocks the web client most often, so try the player clients in
+   order of reliability: android, ios, tv_embedded, mweb, then web, default. */
 async function extractYouTube(url) {
   const strategies = [
+    {
+      name: "android-client",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--extractor-args", "youtube:player_client=android",
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
+      ]
+    },
+    {
+      name: "ios-client",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--extractor-args", "youtube:player_client=ios",
+        "--add-header", "User-Agent:Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      ]
+    },
+    {
+      name: "tv-client",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--extractor-args", "youtube:player_client=tv_embedded",
+        "--add-header", "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36",
+      ]
+    },
+    {
+      name: "mweb-client",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--extractor-args", "youtube:player_client=mweb",
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
+      ]
+    },
     {
       name: "web",
       args: [
@@ -707,14 +740,6 @@ async function extractYouTube(url) {
         "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "--add-header", "Accept-Language:en-US,en;q=0.9",
         "--add-header", "Referer:https://www.youtube.com/",
-      ]
-    },
-    {
-      name: "android-client",
-      args: [
-        "-f", "best[ext=mp4]",
-        "--extractor-args", "youtube:player_client=android",
-        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
       ]
     },
     {
