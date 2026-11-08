@@ -251,6 +251,7 @@ function getPlatform(urlStr) {
     if (hostMatches(h, "facebook.com") || hostMatches(h, "fb.watch")) return "facebook";
     if (hostMatches(h, "twitter.com")  || hostMatches(h, "x.com"))    return "twitter";
     if (hostMatches(h, "tiktok.com"))                                return "tiktok";
+    if (hostMatches(h, "youtube.com") || hostMatches(h, "youtu.be"))   return "youtube";
     return null;
   } catch { return null; }
 }
@@ -258,7 +259,8 @@ function getPlatform(urlStr) {
 const SUPPORTED_DOMAINS = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com"
+  "tiktok.com",
+  "youtube.com", "youtu.be"
 ];
 const CDN_BLOCKLIST = ["cdninstagram.com", "fbcdn.net", "twimg.com", "googlevideo.com"];
 
@@ -692,6 +694,45 @@ async function extractTikTok(url) {
   throw new Error("This video could not be extracted. Link may be invalid or expired.");
 }
 
+/* YouTube: single-file MP4 (video+audio) only — merged DASH formats have no
+   direct URL for --dump-single-json, so "best" alone would return video-only.
+   "best[ext=mp4]" picks the best combined MP4 (usually 720p/360p). The android
+   player-client strategy helps when the web client hits the bot check. */
+async function extractYouTube(url) {
+  const strategies = [
+    {
+      name: "web",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "--add-header", "Accept-Language:en-US,en;q=0.9",
+        "--add-header", "Referer:https://www.youtube.com/",
+      ]
+    },
+    {
+      name: "android-client",
+      args: [
+        "-f", "best[ext=mp4]",
+        "--extractor-args", "youtube:player_client=android",
+        "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
+      ]
+    },
+    {
+      name: "default",
+      args: ["-f", "best[ext=mp4]"]
+    }
+  ];
+  for (const s of strategies) {
+    try {
+      console.log(`[youtube] Trying: ${s.name}`);
+      const out = await runYtdlp(url, s.args);
+      const res = parseYtdlpOutput(out);
+      if (res?.url) { console.log(`[youtube] ✓ ${s.name}`); return res; }
+    } catch(e) { console.log(`[youtube] ✗ ${s.name}:`, e.message.slice(0, 80)); }
+  }
+  throw new Error("This video could not be extracted. It may be private or deleted.");
+}
+
 async function extractDirectVideoUrl(pageUrl) {
   const platform = getPlatform(pageUrl);
   console.log(`[extract] Platform: ${platform} | ${pageUrl.slice(0, 60)}`);
@@ -700,6 +741,7 @@ async function extractDirectVideoUrl(pageUrl) {
   if (platform === "facebook")  return extractFacebook(pageUrl);
   if (platform === "twitter")   return extractTwitter(pageUrl);
   if (platform === "tiktok")    return extractTikTok(pageUrl);
+  if (platform === "youtube")   return extractYouTube(pageUrl);
   throw new Error("Unsupported platform.");
 }
 
