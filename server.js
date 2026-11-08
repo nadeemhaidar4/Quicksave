@@ -705,7 +705,7 @@ async function extractYouTube(url) {
     {
       name: "android-client",
       args: [
-        "-f", "best[ext=mp4]",
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
         "--extractor-args", "youtube:player_client=android",
         "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
       ]
@@ -713,7 +713,7 @@ async function extractYouTube(url) {
     {
       name: "ios-client",
       args: [
-        "-f", "best[ext=mp4]",
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
         "--extractor-args", "youtube:player_client=ios",
         "--add-header", "User-Agent:Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
       ]
@@ -721,7 +721,7 @@ async function extractYouTube(url) {
     {
       name: "tv-client",
       args: [
-        "-f", "best[ext=mp4]",
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
         "--extractor-args", "youtube:player_client=tv_embedded",
         "--add-header", "User-Agent:Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36",
       ]
@@ -729,7 +729,7 @@ async function extractYouTube(url) {
     {
       name: "mweb-client",
       args: [
-        "-f", "best[ext=mp4]",
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
         "--extractor-args", "youtube:player_client=mweb",
         "--add-header", "User-Agent:Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
       ]
@@ -737,7 +737,7 @@ async function extractYouTube(url) {
     {
       name: "web",
       args: [
-        "-f", "best[ext=mp4]",
+        "-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best",
         "--add-header", "User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "--add-header", "Accept-Language:en-US,en;q=0.9",
         "--add-header", "Referer:https://www.youtube.com/",
@@ -745,7 +745,7 @@ async function extractYouTube(url) {
     },
     {
       name: "default",
-      args: ["-f", "best[ext=mp4]"]
+      args: ["-f", "18/22/best[ext=mp4][vcodec!=none][acodec!=none]/best"]
     }
   ];
   for (const s of strategies) {
