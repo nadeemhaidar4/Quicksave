@@ -1,5 +1,5 @@
-/* VidJar app.js v9.2.6 */
-console.log("QuickSave v9.2.6 loaded");
+/* VidJar app.js v9.2.7 */
+console.log("QuickSave v9.2.7 loaded");
 
 const AD_SECONDS   = 5;
 /* Frequency cap — user lagatar download kare to har baar
@@ -67,8 +67,7 @@ const RING_CIRC = 94.25;
 const SUPPORTED = [
   "instagram.com", "facebook.com", "fb.watch",
   "twitter.com", "x.com",
-  "tiktok.com", "vm.tiktok.com",
-  "youtube.com", "youtu.be"
+  "tiktok.com", "vm.tiktok.com"
 ];
 function hostMatches(hostname, domain) {
   const h = hostname.toLowerCase();
